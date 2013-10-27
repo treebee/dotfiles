@@ -1,0 +1,28 @@
+"amixer set Master 2dB-"
+XF86AudioLowerVolume
+
+"amixer set Master toggle"
+XF86AudioMute
+
+"amixer set Master 2dB+"
+XF86AudioRaiseVolume
+
+"mpc prev"
+XF86AudioPrev
+
+"mpc toggle"
+XF86AudioPlay
+
+"mpc next"
+XF86AudioNext
+
+"uzbl --uri mail.zoho.com"
+XF86Mail
+"SamsungToolsDummyCommand"
+  Control+Alt+Shift+Mod4+F1+F2+F3
+"samsung-tools --show-notify --quiet --backlight hotkey"
+  XF86Launch1
+"samsung-tools --show-notify --quiet --bluetooth hotkey"
+  XF86Launch2
+"samsung-tools --show-notify --quiet --webcam hotkey"
+  Alt+KP_Insert

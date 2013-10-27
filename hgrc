@@ -1,0 +1,20 @@
+[ui]
+editor = vim
+username = Patrick Muehlbauer
+email = snpamueh@math.fau.de
+merge = meld
+
+[keyword]
+**.* =
+
+[keywordmaps]
+RCSFile = {file|basename}
+Author = {author|user}
+Header = {file},v {rev} {date|utcdate} {author|user}
+Source = {file}
+Date = {date|utcdate}
+Id = {file},v {rev} {date|utcdate} {author|user}
+Rev = {rev}
+
+[color]
+mode = auto

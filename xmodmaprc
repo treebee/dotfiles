@@ -1,0 +1,4 @@
+keycode  67 = u U udiaeresis Udiaeresis
+keycode  69 = o O odiaeresis Odiaeresis
+keycode 129 = Mode_switch Multi_key
+keycode 135 = Multi_key

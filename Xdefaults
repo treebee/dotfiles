@@ -1,0 +1,48 @@
+*foreground:              #a0a0a0
+!*background:              #1B1D1E
+*background:              #121212
+!black
+*color0:                  #1B1D1E
+*color8:                  #505354
+!red
+*color1:                  #F92672
+*color9:                  #FF5995
+!green
+*color2:                  #82B414
+*color10:                 #B6E354
+!yellow
+*color3:                  #FD971F
+*color11:                 #FEED6C
+!blue
+*color4:                  #4E82AA
+*color12:                 #0C73C2
+!magenta
+*color5:                  #8C54FE
+*color13:                 #9E6FFE
+!cyan
+*color6:                  #465457
+*color14:                 #899CA1
+!white
+*color7:                  #CCCCC6
+*color15:                 #F8F8F2
+
+! Xft
+Xft.dpi: 96
+Xft.antialias: true
+Xft.rgba: rgb
+Xft.hinting: true
+Xft.hinstyle: hintslight
+
+! URxvt
+URxvt.scrollBar: false
+URxvt.loginShell: true
+URxvt*font: xft:Ubuntu Mono:pixelsize=12,style=regular
+URxvt.termName: rxvt-256color
+URxvt.perl-lib: /home/patrick/.urxvt/
+URxvt.perl-ext: default,font,matcher
+URxvt.underlineURLs: true
+URxvt.matcher.button: 3
+URxvt.keysym.M-plus: perl:font:increase
+URxvt.keysym.M-minus: perl:font:decrease
+URxvt.transparent: true
+URxvt.shading: 10

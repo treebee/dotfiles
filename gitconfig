@@ -1,0 +1,28 @@
+[user]
+	email = snpamueh@math.fau.de
+	name = Patrick Muehlbauer
+
+[merge]
+	tool = meld
+
+[core]
+	editor = /usr/bin/vim
+
+[color]
+        ui = auto
+
+[color "branch"]
+        current = green
+        local = yellow
+        remote = red
+
+[color "diff"]
+        meta = cyan
+        frag = magenta
+        old = red bold
+        new = green bold
+
+[color "status"]
+        added = green
+        changed = yellow
+        untracked = cyan

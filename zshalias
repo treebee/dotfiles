@@ -1,0 +1,28 @@
+# ls
+alias ls='ls --color -phFX --group-directories-first'
+alias la='ls -a'
+alias ll='ls -l'
+alias l='ls -l'
+alias ltr='ls -ltr'
+
+# misc
+alias ..='cd ..'
+alias grep='grep -nI --color'
+alias ps='ps -ef'
+alias james="ssh -t patrick@neubau-55-027.mi.uni-erlangen.de tmux attach -t 1"
+
+# security
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+
+# use advcopy/-move if available
+if [ -e /usr/bin/vcp ] ; then
+    alias cp='vcp -gi'
+fi
+if [ -e /usr/bin/vmv ] ; then
+    alias mv='vmv -gi'
+fi
+
+# virtualenvwrapper
+alias mkvirtualenv2="mkvirtualenv --python=/usr/bin/python2"
