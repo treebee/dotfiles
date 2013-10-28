@@ -101,7 +101,11 @@ fi
 
 # Virtualenvwrapper
 export WORKON_HOME=~/.virtualenvs
-source /usr/bin/virtualenvwrapper.sh
+if [ -e /usr/bin/virtualenvwrapper.sh ] ; then
+    source /usr/bin/virtualenvwrapper.sh
+elif [ -e ~/bin/virtualenvwrapper.sh ] ; then
+    source ~/bin/virtualenvwrapper.sh
+fi
 
 if [ -n "$VIRTUAL_ENV" ]; then
   echo $VIRTUAL_ENV
