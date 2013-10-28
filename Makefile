@@ -1,5 +1,5 @@
 install: install-zsh install-vim install-git install-xfiles install-tmux \
-  		 install-hg install-fontconfig
+  		 install-hg install-fontconfig install-subtle
 
 install-zsh:
 	rm -rf ~/.zshrc ~/.zshalias
@@ -33,3 +33,7 @@ install-hg:
 install-fontconfig:
 	rm -rf ~/.config/fontconfig
 	ln -s `pwd`/fontconfig ~/.config/fontconfig
+
+install-subtle:
+	rm -rf ~/.config/subtle
+	ln -s `pwd`/subtle ~/.config/subtle
