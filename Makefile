@@ -1,4 +1,4 @@
-install: install-zsh install-vim install-git install-xfiles install-tmux
+install: install-zsh install-vim install-git install-xfiles install-tmux install-hg
 
 install-zsh:
 	rm -rf ~/.zshrc ~/.zshalias
@@ -24,3 +24,7 @@ install-xfiles:
 install-tmux:
 	rm -rf ~/.tmux.conf
 	ln -s `pwd`/tmux.conf ~/.tmux.conf
+
+install-hg:
+	rm -rf ~/.hgrc
+	ln -s `pwd`/hgrc ~/.hgrc
