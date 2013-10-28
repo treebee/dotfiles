@@ -1,4 +1,5 @@
-install: install-zsh install-vim install-git install-xfiles install-tmux install-hg
+install: install-zsh install-vim install-git install-xfiles install-tmux \
+  		 install-hg install-fontconfig
 
 install-zsh:
 	rm -rf ~/.zshrc ~/.zshalias
@@ -28,3 +29,7 @@ install-tmux:
 install-hg:
 	rm -rf ~/.hgrc
 	ln -s `pwd`/hgrc ~/.hgrc
+
+install-fontconfig:
+	rm -rf ~/.config/fontconfig
+	ln -s `pwd`/fontconfig ~/.config/fontconfig
