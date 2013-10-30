@@ -49,10 +49,6 @@ autocmd FileType pyrex setlocal expandtab shiftwidth=4 tabstop=8 softtabstop=4 s
 " Start python on F5
 autocmd FileType python map <F5> :w<CR>:!python2.7 "%"<CR>
 
-" OpenGL
-" " ---
-autocmd FileType c,cpp source ~/.vim/syntax/opengl.vim
-
 " OpenCL 
 " " ----
 autocmd BufNewFile,BufRead *.cl setf opencl

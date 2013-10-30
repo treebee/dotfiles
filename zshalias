@@ -9,7 +9,7 @@ alias ltr='ls -ltr'
 alias ..='cd ..'
 alias grep='grep -nI --color'
 alias ps='ps -ef'
-alias james="ssh -t patrick@neubau-55-027.mi.uni-erlangen.de tmux attach -t 1"
+alias james="ssh -t patrick@neubau-55-027.mi.uni-erlangen.de tmux attach -t 0"
 
 # security
 alias rm='rm -i'
