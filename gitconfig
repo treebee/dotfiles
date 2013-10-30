@@ -27,4 +27,4 @@
         changed = yellow
         untracked = cyan
 [push]
-	default = simple
+	default = matching

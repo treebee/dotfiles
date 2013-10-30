@@ -88,7 +88,7 @@ set :skip_urgent_warp, false
 
 screen 1 do
   stipple false
-  top     [:views, :title, :spacer, :volume, :notify, :battery, :clock]
+  top     [:views, :separator, :title, :spacer, :volume, :notify, :battery, :clock]
   bottom  [:mpd, :center, :tray, :ipaddr]
   view    0
 end
