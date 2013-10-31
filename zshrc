@@ -157,14 +157,21 @@ setprompt() {
   fi
   # set the prompt
   git_branch=$(parse_git_branch)
-  if [[ $git_branch -ne '' ]]; then
+  if [[ $git_branch != '' ]]; then
     PS1=$'${PR_CYAN}${PR_USER}${PR_CYAN} @ ${PR_HOST}${PR_CYAN} in ${PR_BLUE}%~${PR_CYAN} on $git_branch
-${PR_USER_OP}     '
+${PR_USER_OP} '
   else
     PS1=$'${PR_CYAN}${PR_USER}${PR_CYAN} @ ${PR_HOST}${PR_CYAN} in ${PR_BLUE}%~${PR_CYAN}
-${PR_USER_OP}     '
+${PR_USER_OP} '
   fi
   PS2=$'%_>'
   RPROMPT=$'${vcs_info_msg_0_}'
 }
 setprompt
+
+# Enable auto-execution of functions.
+typeset -ga preexec_functions
+typeset -ga precmd_functions
+typeset -ga chpwd_functions
+
+chpwd_functions+='setprompt'
