@@ -3,8 +3,8 @@ install: install-zsh install-vim install-git install-xfiles install-tmux \
 
 install-zsh:
 	rm -rf ~/.zshrc ~/.zshalias
-	ln -s `pwd`/zshrc ~/.zshrc
-	ln -s `pwd`/zshalias ~/.zshalias
+	ln -s `pwd`/zsh/zshrc ~/.zshrc
+	ln -s `pwd`/zsh/zshalias ~/.zshalias
 
 install-git:
 	rm -rf ~/.gitconfig
