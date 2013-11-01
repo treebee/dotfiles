@@ -1,4 +1,3 @@
-
 # Modules
 autoload complist
 autoload -U compinit
@@ -175,3 +174,8 @@ typeset -ga precmd_functions
 typeset -ga chpwd_functions
 
 chpwd_functions+='setprompt'
+
+# hooks
+if [ -e /usr/share/doc/pkgfile/command-not-found.zsh ]; then
+  source /usr/share/doc/pkgfile/command-not-found.zsh
+fi
