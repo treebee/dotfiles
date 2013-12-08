@@ -406,10 +406,10 @@ end
 
 # Multimedia keys
 grab "XF86AudioMute",        "amixer set Master toggle"
-grab "XF86AudioRaiseVolume", "amixer set Master 2dB+"
-grab modkey + "-C-Up", "amixer set Master 2dB+"
-grab "XF86AudioLowerVolume", "amixer set Master 2dB-"
-grab modkey + "-C-Down", "amixer set Master 2dB-"
+grab "XF86AudioRaiseVolume", "amixer set Master 5%+ -q"
+grab modkey + "-C-Up", "amixer set Master 5%+ -q"
+grab "XF86AudioLowerVolume", "amixer set Master 5%- -q"
+grab modkey + "-C-Down", "amixer set Master 5%- -q"
 grab "XF86AudioPlay",        :MpdToggle
 grab "XF86AudioStop",        :MpdStop
 grab "XF86AudioNext",        :MpdNext
@@ -422,6 +422,7 @@ grab modkey + "-f", "firefox"
 grab modkey + "-i", "dwb"
 grab modkey + "-u", "hedgewars"
 grab modkey + "-p", "sh ~/.fehbg"
+grab modkey + "-0", "~/bin/shareit"
 
 
 # Contrib
