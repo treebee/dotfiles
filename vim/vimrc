@@ -159,6 +159,10 @@ syntax on
 
 " fontsize
 if has('gui_running')
-  set guifont=Ubuntu\ Mono\ 12
+  if(index(['donkeykong', 'diddykong'], hostname()) >= 0)
+    set guifont=Ubuntu\ Mono\ 10
+  else
+    set guifont=Ubuntu\ Mono\ 12
+  endif
 endif
 
