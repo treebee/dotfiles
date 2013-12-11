@@ -20,6 +20,7 @@ set tabstop=4
 set expandtab
 set nocp
 
+
 " pathogen
 execute pathogen#infect()
 
@@ -39,12 +40,12 @@ set titlestring=%F
 
 " python support
 " " --------------
-autocmd FileType python setlocal expandtab shiftwidth=4 tabstop=8 colorcolumn=99
+autocmd FileType python setlocal expandtab shiftwidth=4 tabstop=8 colorcolumn=79
 \ formatoptions+=croq softtabstop=4 smartindent
 \ cinwords=if,elif,else,for,while,try,except,finally,def,class,with
 let python_highlight_all=1
-let python_highlight_exceptions=0
-let python_highlight_builtins=0
+let python_highlight_exceptions=1
+let python_highlight_builtins=1
 autocmd FileType pyrex setlocal expandtab shiftwidth=4 tabstop=8 softtabstop=4 smartindent cinwords=if,elif,else,for,while,try,except,finally,def,class,with,self
 " Start python on F5
 autocmd FileType python map <F5> :w<CR>:!python2.7 "%"<CR>
@@ -92,10 +93,10 @@ autocmd FileType rst setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4 \ f
 autocmd FileType cs setlocal tabstop=8 softtabstop=4 shiftwidth=4 expandtab
 
 " " C/Obj-C/C++
-autocmd FileType c setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab colorcolumn=99
-autocmd FileType cl setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab colorcolumn=99
-autocmd FileType cpp setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab colorcolumn=99
-autocmd FileType objc setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab colorcolumn=99
+autocmd FileType c setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab colorcolumn=79
+autocmd FileType cl setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab colorcolumn=79
+autocmd FileType cpp setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab colorcolumn=79
+autocmd FileType objc setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab colorcolumn=79
 let c_no_curly_error=1
 
 " Erlang support
@@ -166,3 +167,14 @@ if has('gui_running')
   endif
 endif
 
+highlight redhighlighting ctermbg=red guibg=red
+highlight bluehighlighting ctermbg=blue guibg=blue
+match bluehighlighting /^\s*\zs\t\+/
+2match redhighlighting /\s\+\%#\@<!$/
+highlight Pmenu ctermfg=black ctermbg=214 guibg=Magenta
+highlight PmenuSel ctermfg=white ctermbg=17 guibg=DarkGrey
+autocmd BufWinEnter * match bluehighlighting /^\s*\zs\t\+/
+autocmd BufWinEnter * 2match redhighlighting /\s\+\%#\@<!$/
+autocmd BufWinLeave * call clearmatches()
+
+:command! -range=% Reformat :<line1>,<line2>s/ *$//g | :<line1>,<line2>s/       /    /g
