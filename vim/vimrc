@@ -20,7 +20,6 @@ set tabstop=4
 set expandtab
 set nocp
 
-
 " pathogen
 execute pathogen#infect()
 
@@ -156,17 +155,18 @@ set guioptions-=lrb
 filetype plugin on
 filetype indent on
 syntax on
-:colors distinguished
+:colors moep
 
 " fontsize
 if has('gui_running')
   if(index(['donkeykong', 'diddykong'], hostname()) >= 0)
     set guifont=Ubuntu\ Mono\ 10
   else
-    set guifont=Ubuntu\ Mono\ 12
+    set guifont=Ubuntu\ Mono\ 11
   endif
 endif
 
+highlight ColorColumn ctermbg=blue guibg=blue
 highlight redhighlighting ctermbg=red guibg=red
 highlight bluehighlighting ctermbg=blue guibg=blue
 match bluehighlighting /^\s*\zs\t\+/
@@ -178,3 +178,9 @@ autocmd BufWinEnter * 2match redhighlighting /\s\+\%#\@<!$/
 autocmd BufWinLeave * call clearmatches()
 
 :command! -range=% Reformat :<line1>,<line2>s/ +$//g | :<line1>,<line2>s/       /    /g
+
+"""
+" winswap
+let g:windowswap_map_keys = 0 "prevent default bindings
+nnoremap <silent> <leader>yw :call WindowSwap#MarkWindowSwap()<CR>
+nnoremap <silent> <leader>pw :call WindowSwap#DoWindowSwap()<CR>
