@@ -26,3 +26,6 @@ fi
 
 # virtualenvwrapper
 alias mkvirtualenv2="mkvirtualenv --python=/usr/bin/python2"
+
+alias lotr="wine $HOME/.wine/drive_c/Program\ Files\ \(x86\)/EA\ GAMES/Die\ Schlacht\ um\ Mittelerde\(tm\)/lotrbfme.exe"
+

@@ -665,7 +665,7 @@ tag "inkscape" do
 end
 
 tag "game" do
-  match    name: "snes9x-gtk|hedgewars|hwengine|steam"
+  match    name: "snes9x-gtk|hedgewars|hwengine|steam|hl2_linux"
 end
 
 # == Views
@@ -732,8 +732,8 @@ end
 view "terms", "terms"
 view "www", "browser"
 view "stuff", "default|void"
-view "sketch", "inkscape|dia_*|gimp_.*|thunderbird|pdf"
-view "chat", "chat"
+view "sketch", "inkscape|dia_*|gimp_.*|pdf"
+view "chat", "chat|Mail|Thunderbird"
 view "games", "game"
 view "multim", "multimedia"
 

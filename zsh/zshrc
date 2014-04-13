@@ -122,8 +122,6 @@ export PATH=/opt/AMDAPP/CodeXL:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda-5.5/lib64:/usr/local/cuda-5.5/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/opt/openmm/lib:/opt/openmm/lib/plugins:$LD_LIBRARY_PATH
 
-export LD_LIBRARY_PATH=/opt/AMDAPP/CodeXL:$LD_LIBRARY_PATH
-
 export OPENMM_INCLUDE_PATH=/opt/openmm/include
 export OPENMM_LIB_PATH=/opt/openmm/lib
 export OPENMM_PLUGIN_DIR=/opt/openmm/lib/plugins
