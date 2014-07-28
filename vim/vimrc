@@ -52,6 +52,7 @@ autocmd FileType python map <F5> :w<CR>:!python2.7 "%"<CR>
 " OpenCL 
 " " ----
 autocmd BufNewFile,BufRead *.cl setf opencl
+autocmd Filetype opencl setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4 colorcolumn=79
 
 " GLSL
 " " ----
@@ -137,7 +138,6 @@ let hs_highlight_debug=1
 " latex
 let g:tex_flavor='latex'
 
-
 " this is mostly a matter of taste. but LaTeX looks good with just a bit
 " " of indentation.
 set sw=2
@@ -155,7 +155,7 @@ set guioptions-=lrb
 filetype plugin on
 filetype indent on
 syntax on
-:colors moep
+:colors BusyBee
 
 " fontsize
 if has('gui_running')
@@ -177,7 +177,7 @@ autocmd BufWinEnter * match bluehighlighting /^\s*\zs\t\+/
 autocmd BufWinEnter * 2match redhighlighting /\s\+\%#\@<!$/
 autocmd BufWinLeave * call clearmatches()
 
-:command! -range=% Reformat :<line1>,<line2>s/ +$//g | :<line1>,<line2>s/       /    /g
+:command! -range=% Reformat :<line1>,<line2>s/ *$//g | :<line1>,<line2>s/       /    /g
 
 """
 " winswap
