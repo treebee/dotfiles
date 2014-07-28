@@ -159,11 +159,14 @@ syntax on
 
 " fontsize
 if has('gui_running')
+  :colors herald
   if(index(['donkeykong', 'diddykong'], hostname()) >= 0)
     set guifont=Ubuntu\ Mono\ 10
   else
     set guifont=Ubuntu\ Mono\ 11
   endif
+else
+  :colors darkspectrum
 endif
 
 highlight ColorColumn ctermbg=blue guibg=blue
