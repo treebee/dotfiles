@@ -38,8 +38,8 @@ URxvt.scrollBar: false
 URxvt.loginShell: true
 URxvt*font: xft:Ubuntu Mono:pixelsize=12,style=regular
 URxvt.termName: rxvt-256color
-URxvt.perl-lib: /home/patrick/.urxvt/
-URxvt.perl-ext: default,font,matcher
+URxvt.perl-lib: /home/patrick/.urxvt/ext
+URxvt.perl-ext-common: default,font,matcher
 URxvt.underlineURLs: true
 URxvt.matcher.button: 3
 URxvt.keysym.M-plus: perl:font:increase

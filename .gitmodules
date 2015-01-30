@@ -1,3 +1,6 @@
 [submodule "vim/bundle/syntax_opengl"]
 	path = vim/bundle/syntax_opengl
 	url = git://github.com/beyondmarc/opengl.vim.git
+[submodule "oh-my-zsh"]
+	path = oh-my-zsh
+	url = git://github.com/robbyrussell/oh-my-zsh.git
