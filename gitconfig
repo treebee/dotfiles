@@ -1,5 +1,5 @@
 [user]
-	email = snpamueh@math.fau.de
+	email = tmuxbiene@googlemail.com
 	name = Patrick Muehlbauer
 
 [merge]
@@ -27,4 +27,4 @@
         changed = yellow
         untracked = cyan
 [push]
-	default = matching
+	default = simple
