@@ -36,13 +36,15 @@ Xft.hinstyle: hintslight
 ! URxvt
 URxvt.scrollBar: false
 URxvt.loginShell: true
-URxvt*font: xft:Ubuntu Mono:pixelsize=12,style=regular
+URxvt*font: xft:Ubuntu Mono:pixelsize=14,style=regular
 URxvt.termName: rxvt-256color
 URxvt.perl-lib: /home/patrick/.urxvt/ext
-URxvt.perl-ext-common: default,font,matcher
+URxvt.perl-ext-common: default,font-size,matcher
 URxvt.underlineURLs: true
 URxvt.matcher.button: 3
-URxvt.keysym.M-plus: perl:font:increase
-URxvt.keysym.M-minus: perl:font:decrease
 URxvt.transparent: true
 URxvt.shading: 10
+URxvt.keysym.C-Up:     perl:font-size:increase
+URxvt.keysym.C-Down:   perl:font-size:decrease
+URxvt.keysym.C-S-Up:   perl:font-size:incglobal
+URxvt.keysym.C-S-Down: perl:font-size:decglobal
