@@ -18,11 +18,12 @@ install-vim:
 	ln -s ~/vim/vimrc ~/.vimrc
 
 install-xfiles:
-	rm -rf ~/.xbindkeysrc ~/.xinitrc ~/.xmodmaprc ~/.Xdefaults
+	rm -rf ~/.xbindkeysrc ~/.xinitrc ~/.xmodmaprc ~/.Xdefaults ~/.urxvt
 	ln -s `pwd`/xbindkeysrc ~/.xbindkeysrc
 	ln -s `pwd`/xmodmaprc ~/.xmodmaprc
 	ln -s `pwd`/Xdefaults ~/.Xdefaults
 	ln -s `pwd`/xinitrc ~/.xinitrc
+	ln -s `pwd`/urxvt ~/.urxvt
 
 install-tmux:
 	rm -rf ~/.tmux.conf
