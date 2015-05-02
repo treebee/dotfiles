@@ -2,7 +2,7 @@
 " https://github.com/mitsuhiko/dotfiles/blob/master/vim/vimrc
 
 set nocompatible " use VIM defaults
-set background=dark 
+set background=dark
 set ruler        " show cursor position all the time
 set showcmd      " show (partial) command in status line
 set number       " show line numbers
@@ -20,8 +20,6 @@ set tabstop=4
 set expandtab
 set nocp
 
-" pathogen
-execute pathogen#infect()
 
 " The PC is fast enough, do syntax highlight syncing from start
 autocmd BufEnter * :syntax sync fromstart
@@ -75,6 +73,10 @@ autocmd FileType css setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
 " " jQuery
 " "
 au BufRead,BufNewFile jquery.*.js set ft=javascript syntax=jquery
+
+" " jsx
+" "
+let g:jsx_ext_required = 0
 
 " " Coffee
 " "
@@ -151,11 +153,12 @@ set mouse=a
 set guioptions+=lrb
 set guioptions-=lrb
 
+" pathogen
+execute pathogen#infect()
 
+syntax on
 filetype plugin on
 filetype indent on
-syntax on
-:colors BusyBee
 
 " fontsize
 if has('gui_running')
@@ -166,7 +169,7 @@ if has('gui_running')
     set guifont=Ubuntu\ Mono\ 11
   endif
 else
-  :colors darkspectrum
+  :colors Tomorrow
 endif
 
 highlight ColorColumn ctermbg=blue guibg=blue
