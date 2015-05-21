@@ -14,8 +14,11 @@ install-git:
 
 install-vim:
 	rm -rf ~/.vimrc ~/.vim
+	rm -rf ~/.nvimrc ~/.nvim
 	ln -s `pwd`/vim ~/.vim
-	ln -s ~/vim/vimrc ~/.vimrc
+	ln -s `pwd`/vim ~/.nvim
+	ln -s `pwd`/vim/vimrc ~/.vimrc
+	ln -s `pwd`/vim/vimrc ~/.nvimrc
 
 install-xfiles:
 	rm -rf ~/.xbindkeysrc ~/.xinitrc ~/.xmodmaprc ~/.Xdefaults ~/.urxvt
