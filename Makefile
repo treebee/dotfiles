@@ -1,5 +1,5 @@
 install: install-zsh install-vim install-git install-xfiles install-tmux \
-  		 install-hg install-fontconfig install-subtle
+  		 install-hg install-fontconfig install-dunst install-i3
 
 install-zsh:
 	rm -rf ~/.zshrc ~/.zshalias
@@ -40,6 +40,10 @@ install-fontconfig:
 	rm -rf ~/.config/fontconfig
 	ln -s `pwd`/fontconfig ~/.config/fontconfig
 
-install-subtle:
-	rm -rf ~/.config/subtle
-	ln -s `pwd`/subtle ~/.config/subtle
+install-i3:
+	rm -rf ~/.i3
+	ln -s `pwd`/i3 ~/.i3
+
+install-dunst:
+	rm -rf ~/.config/dunst
+	ln -s `pwd`/dunst ~/.config/dunst
