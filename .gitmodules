@@ -22,3 +22,9 @@
 [submodule "vim/bundle/nerdtree"]
     path = vim/bundle/nerdtree
     url = git@github.com:scrooloose/nerdtree.git
+[submodule "vim/bundle/rust"]
+	path = vim/bundle/rust
+	url = https://github.com/rust-lang/rust.vim.git
+[submodule "vim/bundle/jsx"]
+	path = vim/bundle/jsx
+	url = git@github.com:mxw/vim-jsx.git
