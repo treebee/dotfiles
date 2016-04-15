@@ -28,3 +28,6 @@
 [submodule "vim/bundle/jsx"]
 	path = vim/bundle/jsx
 	url = git@github.com:mxw/vim-jsx.git
+[submodule "vim/bundle/vim-less"]
+	path = vim/bundle/vim-less
+	url = https://github.com/groenewege/vim-less.git
