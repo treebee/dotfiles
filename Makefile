@@ -1,5 +1,5 @@
 install: install-zsh install-vim install-git install-xfiles install-tmux \
-  		 install-hg install-fontconfig install-dunst install-i3
+  		 install-hg install-fontconfig install-dunst install-i3 install-nvim
 
 install-zsh:
 	rm -rf ~/.zshrc ~/.zshalias
@@ -14,11 +14,12 @@ install-git:
 
 install-vim:
 	rm -rf ~/.vimrc ~/.vim
-	rm -rf ~/.nvimrc ~/.nvim
-	ln -s `pwd`/vim ~/.nvim
 	ln -s `pwd`/vim ~/.vim
 	ln -s `pwd`/vim/vimrc ~/.vimrc
-	ln -s `pwd`/vim/vimrc ~/.nvimrc
+
+install-nvim:
+	rm -rf ${XDG_CONFIG_HOME}/nvim
+	ln -s `pwd`/nvim ${XDG_CONFIG_HOME}/nvim
 
 install-xfiles:
 	rm -rf ~/.xbindkeysrc ~/.xinitrc ~/.xmodmaprc ~/.Xdefaults ~/.urxvt

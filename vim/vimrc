@@ -190,3 +190,5 @@ autocmd BufWinLeave * call clearmatches()
 let g:windowswap_map_keys = 0 "prevent default bindings
 nnoremap <silent> <leader>yw :call WindowSwap#MarkWindowSwap()<CR>
 nnoremap <silent> <leader>pw :call WindowSwap#DoWindowSwap()<CR>
+let g:SuperTabDefaultCompletionType = "context"
+let g:jedi#popup_on_dot = 0

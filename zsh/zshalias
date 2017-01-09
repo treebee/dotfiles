@@ -26,3 +26,6 @@ fi
 
 # virtualenvwrapper
 alias mkvirtualenv2="mkvirtualenv --python=/usr/bin/python2"
+
+alias rustc-nightly="/usr/local/bin/rustc"
+alias cargo-nightly="/usr/local/bin/cargo"
