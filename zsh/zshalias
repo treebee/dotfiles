@@ -29,3 +29,6 @@ alias mkvirtualenv2="mkvirtualenv --python=/usr/bin/python2"
 
 alias rustc-nightly="/usr/local/bin/rustc"
 alias cargo-nightly="/usr/local/bin/cargo"
+
+alias code="code --enable-proposed-api ms-vscode-remote.remote-containers"
+
