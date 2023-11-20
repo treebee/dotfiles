@@ -1,30 +1,33 @@
 [user]
-	email = patrick@opentrash.org
-	name = Patrick Muehlbauer
+email = patrick@opentrash.org
+name = Patrick Muehlbauer
 
 [merge]
-	tool = meld
+tool = meld
 
 [core]
-	editor = /usr/bin/vim
+editor = /usr/bin/nvim
 
 [color]
-        ui = auto
+ui = auto
 
 [color "branch"]
-        current = green
-        local = yellow
-        remote = red
+current = green
+local = yellow
+remote = red
 
 [color "diff"]
-        meta = cyan
-        frag = magenta
-        old = red bold
-        new = green bold
+meta = cyan
+frag = magenta
+old = red bold
+new = green bold
 
 [color "status"]
-        added = green
-        changed = yellow
-        untracked = cyan
+added = green
+changed = yellow
+untracked = cyan
+
 [push]
-	default = simple
+default = simple
+[init]
+	defaultBranch = main

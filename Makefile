@@ -18,8 +18,8 @@ install-vim:
 	ln -s `pwd`/vim/vimrc ~/.vimrc
 
 install-nvim:
-	rm -rf ${XDG_CONFIG_HOME}/nvim
-	ln -s `pwd`/nvim ${XDG_CONFIG_HOME}/nvim
+	rm -rf ~/.config/nvim
+	ln -s `pwd`/nvim ~/.config/nvim
 
 install-xfiles:
 	rm -rf ~/.xbindkeysrc ~/.xinitrc ~/.xmodmaprc ~/.Xdefaults ~/.urxvt
