@@ -19,6 +19,9 @@ install-vim:
 
 install-nvim:
 	rm -rf ~/.config/nvim
+	mkdir -p ~/.local/share/nvim/site/pack/packer/start
+	git clone --depth 1 https://github.com/wbthomason/packer.nvim\
+		~/.local/share/nvim/site/pack/packer/start/packer.nvim || echo "*** Ignore Error ***"
 	ln -s `pwd`/nvim ~/.config/nvim
 
 install-xfiles:
