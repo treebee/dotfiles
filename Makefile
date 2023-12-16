@@ -3,10 +3,8 @@ install: install-zsh install-vim install-git install-xfiles install-tmux \
 
 install-zsh:
 	rm -rf ~/.zshrc ~/.zshalias
-	rm -f ~/.oh-my-zsh
 	ln -s `pwd`/zsh/zshrc ~/.zshrc
 	ln -s `pwd`/zsh/zshalias ~/.zshalias
-	ln -s `pwd`/oh-my-zsh ~/.oh-my-zsh
 
 install-git:
 	rm -rf ~/.gitconfig
@@ -51,3 +49,7 @@ install-i3:
 install-dunst:
 	rm -rf ~/.config/dunst
 	ln -s `pwd`/dunst ~/.config/dunst
+
+install-alacritty:
+	rm -rf ~/.config/alacritty.yml ~/.config/alacritty.toml
+	ln -s `pwd`/alacritty.toml ~/.config/alacritty.toml
