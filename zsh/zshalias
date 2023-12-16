@@ -1,5 +1,9 @@
 # ls
-alias ls='ls --color -phFX --group-directories-first'
+if [ "$(uname)" "==" "Darwin" ]; then 
+    alias ls='ls --color -phF'
+else
+    alias ls='ls --color -phFX --group-directories-first'
+fi
 alias la='ls -a'
 alias ll='ls -l'
 alias l='ls -l'
@@ -9,7 +13,6 @@ alias ltr='ls -ltr'
 alias ..='cd ..'
 alias grep='grep -nI --color'
 alias ps='ps -ef'
-alias james="ssh -t patrick@neubau-55-027.mi.uni-erlangen.de tmux attach -t 0"
 
 # security
 alias rm='rm -i'
