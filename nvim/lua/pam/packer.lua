@@ -7,10 +7,10 @@ return require('packer').startup(function(use)
     -- Packer can manage itself
     use 'wbthomason/packer.nvim'
 
+    use('nvim-lua/plenary.nvim', { tag = '0.1.4' })
     use {
         'nvim-telescope/telescope.nvim', tag = '0.1.4',
-        -- or                            , branch = '0.1.x',
-        requires = { { 'nvim-lua/plenary.nvim' } }
+        requires = { { 'nvim-lua/plenary.nvim', tag = '0.1.4' } }
     }
 
     use({
@@ -28,11 +28,10 @@ return require('packer').startup(function(use)
             vim.cmd('colorscheme kanagawa')
         end
     })
-    use('nvim-treesitter/nvim-treesitter', { run = ':TSUpdate' })
-    use('nvim-treesitter/playground')
-    use('theprimeagen/harpoon')
-    use('mbbill/undotree')
-    use('tpope/vim-fugitive')
+    use('nvim-treesitter/nvim-treesitter', { run = ':TSUpdate', tag = 'v0.9.1' })
+    use('theprimeagen/harpoon', { branch = 'harpoon2' })
+    use('mbbill/undotree', { tag = 'rel_6.1' })
+    use('tpope/vim-fugitive', { tag = 'v3.7' })
     use {
         'VonHeikemen/lsp-zero.nvim',
         branch = 'v3.x',
@@ -51,4 +50,10 @@ return require('packer').startup(function(use)
     }
     use('github/copilot.vim')
     use('theprimeagen/vim-be-good')
+
+    use('neovim/nvim-lspconfig', { tag = 'v0.1.x' })
+    use('simrat39/rust-tools.nvim')
+
+    -- Debugging
+    use('mfussenegger/nvim-dap')
 end)
