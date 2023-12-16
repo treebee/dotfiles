@@ -6,7 +6,7 @@ name = Patrick Muehlbauer
 tool = meld
 
 [core]
-editor = /usr/bin/nvim
+editor = nvim
 
 [color]
 ui = auto
