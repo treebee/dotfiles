@@ -80,5 +80,12 @@ vim.diagnostic.config({
     virtual_text = true
 })
 
+require('lspconfig').ruff_lsp.setup {
+    init_options = {
+        settings = {
+            args = {}
+        }
+    }
+}
 -- format on save
 vim.cmd [[autocmd BufWritePre * lua vim.lsp.buf.format()]]
