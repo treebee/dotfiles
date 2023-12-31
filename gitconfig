@@ -1,12 +1,12 @@
 [user]
-email = patrick@opentrash.org
-name = Patrick Muehlbauer
+email = pam@solute.de
+name = Patrick Mühlbauer
 
 [merge]
 tool = meld
 
 [core]
-editor = nvim
+editor = /usr/bin/vim
 
 [color]
 ui = auto
@@ -31,3 +31,5 @@ untracked = cyan
 default = simple
 [init]
 	defaultBranch = main
+[log]
+	follow = true

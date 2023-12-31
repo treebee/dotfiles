@@ -89,3 +89,62 @@ require('lspconfig').ruff_lsp.setup {
 }
 -- format on save
 vim.cmd [[autocmd BufWritePre * lua vim.lsp.buf.format()]]
+
+
+-- Solute stuff
+-- Only show diagnostics for "our" code,
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = { "python" },
+    callback = function()
+        prefixes = {
+            vim.env.SOLUTE_DEV_ROOT,
+            --            vim.env.HOME .. "/GIT/tues",
+            --            vim.env.HOME .. "/GIT/pgpeek",
+        }
+        path = vim.api.nvim_buf_get_name(0)
+        buf = vim.api.nvim_win_get_buf(0)
+        -- bail out if something looks like an installed module, we sometimes
+        -- visit and even edit these for debugging, but we never want to lint
+        -- or auto format them, we explicitly check them first because they
+        -- may still live below one of our prefixes somewhere in the filesystem
+        if string.find(path, "(.*/site-packages/.*|.*/.tox/.*)") ~= nil then
+            vim.diagnostic.disable(buf)
+            return
+        end
+
+        for _, prefix in ipairs(prefixes) do
+            if string.find(path, "^" .. prefix) ~= nil then
+                vim.diagnostic.enable(buf)
+                return
+            end
+        end
+        -- finally, disable for everything else, assuming it is foreign code
+        vim.diagnostic.disable(buf)
+    end,
+})
+
+-- Format Python code on-save
+vim.api.nvim_create_autocmd("BufWritePre", {
+    callback = function()
+        if vim.bo.filetype == "python" then
+            vim.lsp.buf.format()
+        end
+    end
+})
+
+require("lspconfig").pylsp.setup({
+    --cmd = {vim.env["HOME"] .. "/.virtualenvs/solute-pyformat/bin/pylsp", "--log-file", "/tmp/lsplog", "-v"},
+    cmd = { vim.env["HOME"] .. "/.virtualenvs/solute-pyformat/bin/pylsp" },
+    --cmd = {vim.env["HOME"] .. "/.local/bin/pylsp"},
+    settings = {
+        pylsp = {
+            plugins = {
+                solute_pyformat = {
+                    enabled = true,
+                },
+            },
+        },
+    },
+})
+
+require('dap-python').setup('~/.virtualenvs/debugpy/bin/python')

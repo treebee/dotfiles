@@ -93,15 +93,14 @@ fi
 
 export XDG_CONFIG_HOME=$HOME/.config
 export ANDROID_HOME='/opt/android-sdk'
-[ -s "/usr/share/nvm/init-nvm.sh" ] && source "/usr/share/nvm/init-nvm.sh"
-[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"
+source /usr/share/nvm/init-nvm.sh
 
 export FLYCTL_INSTALL="/home/patrick/.fly"
 export PATH="$FLYCTL_INSTALL/bin:$PATH"
 
 eval "$(atuin init zsh)"
 
-[ -s "&HOME/.rye/env" ] && source "$HOME/.rye/env"
+source "$HOME/.rye/env"
 
 # bun completions
 [ -s "/home/patrick/.bun/_bun" ] && source "/home/patrick/.bun/_bun"
