@@ -9,6 +9,7 @@ export ZSH=$HOME/.oh-my-zsh
 # time that oh-my-zsh is loaded.
 ZSH_THEME="dstufft"
 
+
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
 
@@ -93,14 +94,15 @@ fi
 
 export XDG_CONFIG_HOME=$HOME/.config
 export ANDROID_HOME='/opt/android-sdk'
-source /usr/share/nvm/init-nvm.sh
+[ -s "/usr/share/nvm/init-nvm.sh" ] && source /usr/share/nvm/init-nvm.sh
 
 export FLYCTL_INSTALL="/home/patrick/.fly"
 export PATH="$FLYCTL_INSTALL/bin:$PATH"
 
 eval "$(atuin init zsh)"
 
-source "$HOME/.rye/env"
+[ -s "$HOME/.rye/env" ] && source "$HOME/.rye/env"
 
 # bun completions
 [ -s "/home/patrick/.bun/_bun" ] && source "/home/patrick/.bun/_bun"
+source $HOME/.zshrc.solute-dev
