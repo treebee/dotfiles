@@ -28,6 +28,14 @@ return require('packer').startup(function(use)
             vim.cmd('colorscheme kanagawa')
         end
     })
+    use({
+        "folke/tokyonight.nvim",
+        as = "tokyonight",
+        config = function()
+            vim.cmd('colorscheme tokyonight')
+        end
+    })
+
     use('nvim-treesitter/nvim-treesitter', { run = ':TSUpdate', tag = 'v0.9.1' })
     use('theprimeagen/harpoon', { branch = 'harpoon2' })
     use('mbbill/undotree', { tag = 'rel_6.1' })
@@ -66,6 +74,10 @@ return require('packer').startup(function(use)
             vim.o.timeoutlen = 300
             require("which-key").setup {}
         end
+    }
+    use { "nvim-tree/nvim-web-devicons" }
+    use {
+        "folke/trouble.nvim", { requires = { "nvim-tree/nvim-web-devicons" } }
     }
 
     use('norcalli/nvim-colorizer.lua')
