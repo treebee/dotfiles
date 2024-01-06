@@ -132,19 +132,20 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     end
 })
 
-require("lspconfig").pylsp.setup({
-    --cmd = {vim.env["HOME"] .. "/.virtualenvs/solute-pyformat/bin/pylsp", "--log-file", "/tmp/lsplog", "-v"},
-    cmd = { vim.env["HOME"] .. "/.virtualenvs/solute-pyformat/bin/pylsp" },
-    --cmd = {vim.env["HOME"] .. "/.local/bin/pylsp"},
-    settings = {
-        pylsp = {
-            plugins = {
-                solute_pyformat = {
-                    enabled = true,
+if vim.loop.os_gethostname() == "pam-notebook" then
+    require("lspconfig").pylsp.setup({
+        --cmd = {vim.env["HOME"] .. "/.virtualenvs/solute-pyformat/bin/pylsp", "--log-file", "/tmp/lsplog", "-v"},
+        cmd = { vim.env["HOME"] .. "/.virtualenvs/solute-pyformat/bin/pylsp" },
+        --cmd = {vim.env["HOME"] .. "/.local/bin/pylsp"},
+        settings = {
+            pylsp = {
+                plugins = {
+                    solute_pyformat = {
+                        enabled = true,
+                    },
                 },
             },
         },
-    },
-})
-
-require('dap-python').setup('~/.virtualenvs/debugpy/bin/python')
+    })
+end
+require('dap-python').setup()
