@@ -38,4 +38,4 @@ alias code="code --enable-proposed-api ms-vscode-remote.remote-containers"
 # enable elixir shell history
 alias iex='iex --erl "-kernel shell_history enabled"'
 
-alias nvim='$HOME/nvim/bin/nvim'
+[ -s $HOME/nvim/bin/nvim ] && alias nvim='$HOME/nvim/bin/nvim'
