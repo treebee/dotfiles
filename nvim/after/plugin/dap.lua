@@ -1,4 +1,3 @@
-local dap = require('dap')
 local dapui = require('dapui')
 
 require("dap-python").setup()
@@ -35,6 +34,7 @@ dapui.setup({
         {
             elements = {
                 "console",
+                "repl",
             },
             size = 20,
             position = "bottom", -- Can be "bottom" or "top"
