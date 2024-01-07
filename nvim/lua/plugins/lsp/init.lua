@@ -1,128 +1,93 @@
 return {
+    "j-hui/fidget.nvim",
+    "hrsh7th/cmp-nvim-lsp",
+    "hrsh7th/cmp-buffer",
+    "hrsh7th/cmp-path",
+    "hrsh7th/cmp-cmdline",
     {
-        "neovim/nvim-lspconfig",
-        event = "LazyFile",
-        dependencies = {
-            { "folke/neoconf.nvim", cmd = "Neoconf", config = false, dependencies = { "nvim-lspconfig" } },
-            {
-                "folke/neodev.nvim",
-                opts = {
-                    libary = { plugins = { "nvim-dap-ui" }, types = true }
-                }
-            },
-            "mason.nvim",
-            "williamboman/mason-lspconfig.nvim",
-            "hrsh7th/nvim-cmp",
-            "hrsh7th/cmp-nvim-lsp",
-            "L3MON4D3/LuaSnip",
-        },
-        opts = {
-            diagnostics = {
-                underline = true,
-                update_in_insert = false,
-                virtual_text = {
-                    spacing = 4,
-                    source = "if_many",
-                    prefix = "icons",
-                },
-                severity_sort = true,
-            },
-            inlay_hints = {
-                enable = true,
-            },
-            servers = {
-                lua_ls = {
-                    settings = {
-                        Lua = {
-                            workspace = {
-                                checkThirdParty = false,
-                            },
-                            completion = {
-                                callSnippet = "Replace",
-                            },
-                            diagnostics = {
-                                globals = { "vim" },
-                            },
-                        },
-                    },
-
-                },
-                pylsp = {},
-                elixirls = {},
-                eslint = {},
-                ruff_lsp = {},
-                cssls = {},
-                html = {},
-                htmx = {},
-                tailwindcss = {},
-                puppet = {},
-            },
-            setup = {},
-        },
-        config = function(_, opts)
-            local plugin = require("lazy.core.config").spec.plugins["neoconf.nvim"]
-            require("neoconf").setup(require("lazy.core.plugin").values(plugin, "opts", false))
-
-            local servers = opts.servers
-            local has_cmp, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
-            local capabilities = vim.tbl_deep_extend(
-                "force", {}, vim.lsp.protocol.make_client_capabilities(),
-                has_cmp and cmp_nvim_lsp.default_capabilities() or {}, opts.capabilities or {}
-            )
-
-            local function setup(server)
-                local server_opts = vim.tbl_deep_extend("force", {
-                    capabilities = vim.deepcopy(capabilities),
-                }, servers[server] or {})
-
-                if opts.setup[server] then
-                    if opts.setup[server](server, server_opts) then
-                        return
-                    end
-                elseif opts.setup["*"] then
-                    if opts.setup["*"](server, server_opts) then
-                        return
-                    end
-                end
-                require("lspconfig")[server].setup(server_opts)
-            end
-
-            -- get all the servers that are available through mason-lspconfig
-            local have_mason, mlsp = pcall(require, "mason-lspconfig")
-            local all_mslp_servers = {}
-            if have_mason then
-                all_mslp_servers = vim.tbl_keys(require("mason-lspconfig.mappings.server").lspconfig_to_package)
-            end
-
-            local ensure_installed = {} ---@type string[]
-            for server, server_opts in pairs(servers) do
-                if server_opts then
-                    server_opts = server_opts == true and {} or server_opts
-                    -- run manual setup if mason=false or if this is a server that cannot be installed with mason-lspconfig
-                    if server_opts.mason == false or not vim.tbl_contains(all_mslp_servers, server) then
-                        setup(server)
-                    else
-                        ensure_installed[#ensure_installed + 1] = server
-                    end
-                end
-            end
-
-            if have_mason then
-                mlsp.setup({ ensure_installed = ensure_installed, handlers = { setup } })
-            end
+        'VonHeikemen/lsp-zero.nvim',
+        branch = 'v3.x',
+        lazy = true,
+        config = false,
+        init = function()
+            -- Disable automatic setup, we are doing it manually
+            vim.g.lsp_zero_extend_cmp = 0
+            vim.g.lsp_zero_extend_lspconfig = 0
         end,
-
     },
     {
-        "williamboman/mason.nvim",
-        cmd = "Mason",
-        build = ":MasonUpdate",
-        opts = {
-            ensure_installed = {
-                "tsserver", "eslint",
-                "lua_ls", "pylsp", "elixirls", "html", "tailwindcss", "cssls",
-                "htmx", "codelldb",
-            },
-        },
+        'williamboman/mason.nvim',
+        lazy = false,
+        config = true,
     },
+
+    -- Autocompletion
+    {
+        'hrsh7th/nvim-cmp',
+        event = 'InsertEnter',
+        dependencies = {
+            { 'L3MON4D3/LuaSnip' },
+        },
+        config = function()
+            -- Here is where you configure the autocompletion settings.
+            local lsp_zero = require('lsp-zero')
+            lsp_zero.preset("recommended")
+
+            lsp_zero.extend_cmp()
+
+            -- And you can configure cmp even more, if you want to.
+            local cmp = require('cmp')
+            local cmp_action = lsp_zero.cmp_action()
+            local cmp_select = { behavior = cmp.SelectBehavior.Select }
+
+            cmp.setup({
+                formatting = lsp_zero.cmp_format(),
+                mapping = cmp.mapping.preset.insert({
+                    ['<C-Space>'] = cmp.mapping.complete(),
+                    ['<C-p>'] = cmp.mapping.select_prev_item(cmp_select),
+                    ['<C-n>'] = cmp.mapping.select_next_item(cmp_select),
+                    ['<C-f>'] = cmp_action.luasnip_jump_forward(),
+                    ['<C-b>'] = cmp_action.luasnip_jump_backward(),
+                })
+            })
+        end
+    },
+
+    -- LSP
+    {
+        'neovim/nvim-lspconfig',
+        cmd = { 'LspInfo', 'LspInstall', 'LspStart' },
+        event = { 'BufReadPre', 'BufNewFile' },
+        dependencies = {
+            { 'hrsh7th/cmp-nvim-lsp' },
+            { 'williamboman/mason-lspconfig.nvim' },
+        },
+        config = function()
+            -- This is where all the LSP shenanigans will live
+            local lsp_zero = require('lsp-zero')
+            lsp_zero.extend_lspconfig()
+
+            lsp_zero.on_attach(function(client, bufnr)
+                -- see :help lsp-zero-keybindings
+                -- to learn the available actions
+                lsp_zero.default_keymaps({ buffer = bufnr })
+            end)
+
+            require('mason-lspconfig').setup({
+                ensure_installed = {
+                    'tsserver', 'rust_analyzer', 'eslint', 'lua_ls',
+                    'elixirls', 'html', 'htmx', 'cssls', 'tailwindcss'
+                },
+                handlers = {
+                    lsp_zero.default_setup,
+                    rust_analyzer = lsp_zero.noop,
+                    lua_ls = function()
+                        -- (Optional) Configure lua language server for neovim
+                        local lua_opts = lsp_zero.nvim_lua_ls()
+                        require('lspconfig').lua_ls.setup(lua_opts)
+                    end,
+                }
+            })
+        end
+    }
 }
