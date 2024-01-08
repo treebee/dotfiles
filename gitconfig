@@ -5,7 +5,16 @@ name = Patrick Mühlbauer
 [merge]
 tool = meld
 
+[diff]
+    colorMoved = default
+
+[delta]
+    navigate = true
+    light = false
+    side-by-side = true
+
 [core]
+pager = delta
 editor = /usr/bin/vim
 
 [color]
