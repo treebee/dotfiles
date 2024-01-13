@@ -3,7 +3,7 @@ return {
         "j-hui/fidget.nvim",
         config = function()
             require("fidget").setup({})
-        end
+        end,
     },
     "hrsh7th/cmp-nvim-lsp",
     "hrsh7th/cmp-buffer",
