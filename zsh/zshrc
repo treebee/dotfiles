@@ -48,7 +48,7 @@ ZSH_THEME="dstufft"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git tmux)
+plugins=(git tmux rust vi-mode)
 
 # User configuration
 
@@ -102,6 +102,8 @@ export PATH="$FLYCTL_INSTALL/bin:$PATH"
 eval "$(atuin init zsh)"
 
 [ -s "$HOME/.rye/env" ] && source "$HOME/.rye/env"
+
+export VI_MODE_SET_CURSOR=true
 
 # bun completions
 [ -s "/home/patrick/.bun/_bun" ] && source "/home/patrick/.bun/_bun"
