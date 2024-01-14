@@ -1,6 +1,5 @@
 local lspconfig = require('lspconfig')
 
-
 vim.api.nvim_create_autocmd("LspAttach", {
     group = vim.api.nvim_create_augroup("PamLspConfig", {}),
     callback = function(ev)
@@ -22,7 +21,7 @@ vim.diagnostic.config({
     virtual_text = true
 })
 
-if vim.loop.os_gethostname() == "pam-notebook" then
+if vim.loop.os_gethostname() == "notebook-pam" then
     -- Solute stuff
     -- Only show diagnostics for "our" code,
     vim.api.nvim_create_autocmd("FileType", {

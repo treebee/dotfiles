@@ -1,5 +1,10 @@
 return {
-    "j-hui/fidget.nvim",
+    {
+        "j-hui/fidget.nvim",
+        config = function()
+            require("fidget").setup({})
+        end
+    },
     "hrsh7th/cmp-nvim-lsp",
     "hrsh7th/cmp-buffer",
     "hrsh7th/cmp-path",
@@ -76,7 +81,7 @@ return {
             require('mason-lspconfig').setup({
                 ensure_installed = {
                     'tsserver', 'rust_analyzer', 'eslint', 'lua_ls',
-                    'elixirls', 'html', 'htmx', 'cssls', 'tailwindcss'
+                    'elixirls', 'html', 'htmx', 'cssls', 'tailwindcss', 'pylsp',
                 },
                 handlers = {
                     lsp_zero.default_setup,
@@ -89,5 +94,11 @@ return {
                 }
             })
         end
+    },
+    {
+        'ray-x/lsp_signature.nvim',
+        event = "VeryLazy",
+        opts = {},
+        config = function(_, opts) require'lsp_signature'.setup(opts) end
     }
 }
