@@ -107,4 +107,5 @@ export VI_MODE_SET_CURSOR=true
 
 # bun completions
 [ -s "/home/patrick/.bun/_bun" ] && source "/home/patrick/.bun/_bun"
+[ -s "/opt/homebrew/opt/asdf/libexec/asdf.sh" ] && . /opt/homebrew/opt/asdf/libexec/asdf.sh
 source $HOME/.zshrc.solute-dev
