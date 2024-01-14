@@ -56,6 +56,8 @@ return {
         "c",
         "diff",
         "elixir",
+        "heex",
+        "erlang",
         "html",
         "javascript",
         "jsdoc",
