@@ -51,9 +51,27 @@ return {
                     ['<C-Space>'] = cmp.mapping.complete(),
                     ['<C-p>'] = cmp.mapping.select_prev_item(cmp_select),
                     ['<C-n>'] = cmp.mapping.select_next_item(cmp_select),
+                    ['<C-u>'] = cmp.mapping.scroll_docs(4),
+                    ['<C-d>'] = cmp.mapping.scroll_docs(-4),
+                    ['<C-c>'] = cmp.mapping.abort(),
                     ['<C-f>'] = cmp_action.luasnip_jump_forward(),
                     ['<C-b>'] = cmp_action.luasnip_jump_backward(),
-                })
+
+                }),
+                sourcs = cmp.config.sources({
+                    { name = "copilot" },
+                    { name = "nvim_lsp" },
+                    { name = "luasnip", max_item_count = 3 },
+                    { name = "buffer",  max_item_count = 5 },
+                    { name = "path",    max_item_count = 3 },
+                }),
+                window = {
+                    completion = cmp.config.window.bordered(),
+                    documentation = cmp.config.window.bordered(),
+                },
+                experimental = {
+                    ghost_text = false,
+                },
             })
         end
     },
@@ -99,6 +117,6 @@ return {
         'ray-x/lsp_signature.nvim',
         event = "VeryLazy",
         opts = {},
-        config = function(_, opts) require'lsp_signature'.setup(opts) end
+        config = function(_, opts) require 'lsp_signature'.setup(opts) end
     }
 }
