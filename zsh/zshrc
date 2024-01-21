@@ -48,7 +48,7 @@ ZSH_THEME="dstufft"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git tmux)
+plugins=(git tmux rust vi-mode)
 
 # User configuration
 
@@ -103,6 +103,9 @@ eval "$(atuin init zsh)"
 
 [ -s "$HOME/.rye/env" ] && source "$HOME/.rye/env"
 
+export VI_MODE_SET_CURSOR=true
+
 # bun completions
 [ -s "/home/patrick/.bun/_bun" ] && source "/home/patrick/.bun/_bun"
+[ -s "/opt/homebrew/opt/asdf/libexec/asdf.sh" ] && . /opt/homebrew/opt/asdf/libexec/asdf.sh
 source $HOME/.zshrc.solute-dev
