@@ -79,9 +79,6 @@ end
 
 vim.api.nvim_create_autocmd("BufWritePre", {
     callback = function()
-        local elixir_files = { "elixir", "heex" }
-        if elixir_files[vim.bo.filetype] then
-            vim.lsp.buf.format()
-        end
+        vim.lsp.buf.format()
     end
 })
