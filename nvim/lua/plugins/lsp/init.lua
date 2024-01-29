@@ -56,7 +56,6 @@ return {
                     ['<C-c>'] = cmp.mapping.abort(),
                     ['<C-f>'] = cmp_action.luasnip_jump_forward(),
                     ['<C-b>'] = cmp_action.luasnip_jump_backward(),
-
                 }),
                 sourcs = cmp.config.sources({
                     { name = "copilot" },
@@ -70,7 +69,7 @@ return {
                     documentation = cmp.config.window.bordered(),
                 },
                 experimental = {
-                    ghost_text = false,
+                    ghost_text = true,
                 },
             })
         end
@@ -93,7 +92,7 @@ return {
             local lsp_zero = require('lsp-zero')
             lsp_zero.extend_lspconfig()
 
-            lsp_zero.on_attach(function(client, bufnr)
+            lsp_zero.on_attach(function(_client, bufnr)
                 -- see :help lsp-zero-keybindings
                 -- to learn the available actions
                 lsp_zero.default_keymaps({ buffer = bufnr })
