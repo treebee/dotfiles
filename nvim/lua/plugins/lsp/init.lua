@@ -31,21 +31,30 @@ return {
         'hrsh7th/nvim-cmp',
         event = 'InsertEnter',
         dependencies = {
-            { 'L3MON4D3/LuaSnip' },
+            "L3MON4D3/LuaSnip",
+            "windwp/nvim-autopairs",
         },
         config = function()
-            -- Here is where you configure the autocompletion settings.
             local lsp_zero = require('lsp-zero')
-            lsp_zero.preset("recommended")
-
-            lsp_zero.extend_cmp()
-
-            -- And you can configure cmp even more, if you want to.
             local cmp = require('cmp')
             local cmp_action = lsp_zero.cmp_action()
             local cmp_select = { behavior = cmp.SelectBehavior.Select }
+            local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+
+            lsp_zero.preset("recommended")
+            lsp_zero.extend_cmp()
+
+            require("nvim-autopairs").setup()
+            cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+
+            require("luasnip.loaders.from_vscode").lazy_load()
 
             cmp.setup({
+                snippet = {
+                    expand = function(args)
+                        luasnip.lsp_expand(args.body)
+                    end,
+                },
                 formatting = lsp_zero.cmp_format(),
                 mapping = cmp.mapping.preset.insert({
                     ['<C-Space>'] = cmp.mapping.complete(),
