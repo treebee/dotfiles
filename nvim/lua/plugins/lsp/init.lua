@@ -40,6 +40,7 @@ return {
             local cmp_action = lsp_zero.cmp_action()
             local cmp_select = { behavior = cmp.SelectBehavior.Select }
             local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+            local luasnip = require("luasnip")
 
             lsp_zero.preset("recommended")
             lsp_zero.extend_cmp()
@@ -111,6 +112,7 @@ return {
                 ensure_installed = {
                     'tsserver', 'rust_analyzer', 'eslint', 'lua_ls', 'gopls',
                     'elixirls', 'html', 'htmx', 'cssls', 'tailwindcss', 'pylsp',
+                    'gleam',
                 },
                 handlers = {
                     lsp_zero.default_setup,

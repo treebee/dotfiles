@@ -27,7 +27,7 @@ return {
                             move[name] = function(q, ...)
                                 if vim.wo.diff then
                                     local config = configs.get_module("textobjects.move")
-                                    [name] ---@type table<string,string>
+                                        [name] ---@type table<string,string>
                                     for key, query in pairs(config or {}) do
                                         if q == query and key:find("[%]%[][cC]") then
                                             vim.cmd("normal! " .. key)
@@ -61,6 +61,7 @@ return {
                 "heex",
                 "erlang",
                 "html",
+                "gleam",
                 "javascript",
                 "jsdoc",
                 "json",
