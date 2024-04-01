@@ -60,6 +60,10 @@ source $ZSH/oh-my-zsh.sh
 [ -s "/usr/bin/virtualenvwrapper.sh" ] && source /usr/bin/virtualenvwrapper.sh
 if [ "$(uname)" "==" "Darwin" ]; then
 source virtualenvwrapper.sh
+
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export NDK_HOME="$ANDROID_HOME/ndk/26.2.11394342"
 fi
 
 
@@ -88,6 +92,8 @@ fi
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 #
+eval "$(fzf --zsh)"
+
 if [ -f $HOME/.zshalias ] ; then
   source $HOME/.zshalias
 fi
@@ -108,4 +114,5 @@ export VI_MODE_SET_CURSOR=true
 # bun completions
 [ -s "/home/patrick/.bun/_bun" ] && source "/home/patrick/.bun/_bun"
 [ -s "/opt/homebrew/opt/asdf/libexec/asdf.sh" ] && . /opt/homebrew/opt/asdf/libexec/asdf.sh
-source $HOME/.zshrc.solute-dev
+[ -s "$HOME/.zshrc.solute-dev" ] && source $HOME/.zshrc.solute-dev
+
