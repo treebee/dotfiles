@@ -112,7 +112,6 @@ return {
                 ensure_installed = {
                     'tsserver', 'rust_analyzer', 'eslint', 'lua_ls', 'gopls',
                     'elixirls', 'html', 'htmx', 'cssls', 'tailwindcss', 'pylsp',
-                    'gleam',
                 },
                 handlers = {
                     lsp_zero.default_setup,

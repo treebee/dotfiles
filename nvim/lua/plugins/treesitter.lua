@@ -57,6 +57,7 @@ return {
                 "c",
                 "diff",
                 "elixir",
+                "gleam",
                 "go",
                 "heex",
                 "erlang",
