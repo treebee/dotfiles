@@ -53,3 +53,7 @@ install-dunst:
 install-alacritty:
 	rm -rf ~/.config/alacritty.yml ~/.config/alacritty.toml
 	ln -s `pwd`/alacritty.toml ~/.config/alacritty.toml
+
+install-wezterm:
+	rm -rf ~/.wezterm.lua
+	ln -s `pwd`/wezterm.lua ~/.wezterm.lua
