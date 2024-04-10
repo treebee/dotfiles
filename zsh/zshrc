@@ -114,5 +114,7 @@ export VI_MODE_SET_CURSOR=true
 # bun completions
 [ -s "/home/patrick/.bun/_bun" ] && source "/home/patrick/.bun/_bun"
 [ -s "/opt/homebrew/opt/asdf/libexec/asdf.sh" ] && . /opt/homebrew/opt/asdf/libexec/asdf.sh
+
 [ -s "$HOME/.zshrc.solute-dev" ] && source $HOME/.zshrc.solute-dev
 
+export TERM=screen-256color
