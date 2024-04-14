@@ -1,6 +1,7 @@
 # ls
 if [ "$(uname)" "==" "Darwin" ]; then 
     alias ls='ls --color -phF'
+    alias cw='tmux-sessionizer'
 else
     alias ls='ls --color -phFX --group-directories-first'
 fi
