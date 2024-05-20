@@ -33,6 +33,7 @@ install-xfiles:
 install-tmux:
 	rm -rf ~/.tmux.conf
 	ln -s `pwd`/tmux.conf ~/.tmux.conf
+	git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm || bash -c "pushd ~/.tmux/plugins/tpm && git pull && popd"
 
 install-hg:
 	rm -rf ~/.hgrc
@@ -57,3 +58,4 @@ install-alacritty:
 install-wezterm:
 	rm -rf ~/.wezterm.lua
 	ln -s `pwd`/wezterm.lua ~/.wezterm.lua
+
