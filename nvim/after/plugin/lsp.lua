@@ -1,5 +1,7 @@
 local lspconfig = require('lspconfig')
 
+lspconfig.gleam.setup({})
+
 vim.api.nvim_create_autocmd("LspAttach", {
     group = vim.api.nvim_create_augroup("PamLspConfig", {}),
     callback = function(ev)

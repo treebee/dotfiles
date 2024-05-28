@@ -97,6 +97,7 @@ return {
         },
         config = function()
             require("neodev").setup()
+            local lspconfig = require('lspconfig')
 
             -- This is where all the LSP shenanigans will live
             local lsp_zero = require('lsp-zero')
@@ -119,7 +120,7 @@ return {
                     lua_ls = function()
                         -- (Optional) Configure lua language server for neovim
                         local lua_opts = lsp_zero.nvim_lua_ls()
-                        require('lspconfig').lua_ls.setup(lua_opts)
+                        lspconfig.lua_ls.setup(lua_opts)
                     end,
                 }
             })
