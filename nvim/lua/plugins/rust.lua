@@ -1,6 +1,5 @@
 return {
     'mrcjkb/rustaceanvim',
-    version = '^3', -- Recommended
     dependencies = {
         "nvim-lua/plenary.nvim",
         "mfussenegger/nvim-dap",
