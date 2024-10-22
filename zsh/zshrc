@@ -98,8 +98,6 @@ if [ -f $HOME/.zshalias ] ; then
 fi
 
 export XDG_CONFIG_HOME=$HOME/.config
-export ANDROID_HOME="$HOME/Android/Sdk"
-export NDK_HOME="$ANDROID_HOME/ndk/27.0.11902837"
 [ -s "/usr/share/nvm/init-nvm.sh" ] && source /usr/share/nvm/init-nvm.sh
 
 export FLYCTL_INSTALL="/home/patrick/.fly"
@@ -118,3 +116,7 @@ export VI_MODE_SET_CURSOR=true
 [ -s "$HOME/.zshrc.solute-dev" ] && source $HOME/.zshrc.solute-dev
 
 export TERM=screen-256color
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
