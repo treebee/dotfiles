@@ -27,17 +27,19 @@ if vim.loop.os_gethostname() == "notebook-pam" then
     vim.api.nvim_create_autocmd("FileType", {
         pattern = { "python" },
         callback = function()
-            local prefixes = {
+            prefixes = {
                 vim.env.SOLUTE_DEV_ROOT,
+                vim.env.HOME .. "/workspace/tues",
+                vim.env.HOME .. "/GIT/pgpeek",
             }
-            local path = vim.api.nvim_buf_get_name(0)
-            local buf = vim.api.nvim_win_get_buf(0)
+            path = vim.api.nvim_buf_get_name(0)
+            buf = vim.api.nvim_win_get_buf(0)
             -- bail out if something looks like an installed module, we sometimes
             -- visit and even edit these for debugging, but we never want to lint
             -- or auto format them, we explicitly check them first because they
             -- may still live below one of our prefixes somewhere in the filesystem
             if string.find(path, "(.*/site-packages/.*|.*/.tox/.*)") ~= nil then
-                vim.diagnostic.disable(buf)
+                vim.diagnostic.enable(false)
                 return
             end
 
@@ -56,12 +58,12 @@ if vim.loop.os_gethostname() == "notebook-pam" then
     vim.api.nvim_create_autocmd("BufWritePre", {
         callback = function()
             if vim.bo.filetype == "python" then
-                vim.lsp.buf.format()
+                vim.lsp.buf.format({ async = false })
             end
         end
     })
 
-    lspconfig.pylsp.setup({
+    require("lspconfig").pylsp.setup({
         --cmd = {vim.env["HOME"] .. "/.virtualenvs/solute-pyformat/bin/pylsp", "--log-file", "/tmp/lsplog", "-v"},
         cmd = { vim.env["HOME"] .. "/.virtualenvs/solute-pyformat/bin/pylsp" },
         --cmd = {vim.env["HOME"] .. "/.local/bin/pylsp"},
