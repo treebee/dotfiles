@@ -80,6 +80,16 @@ config.keys = {
         },
     },
     {
+        mods   = "CTRL",
+        key    = "LeftArrow",
+        action = wezterm.action.ActivateTabRelative(-1)
+    },
+    {
+        mods   = "CTRL",
+        key    = "RightArrow",
+        action = wezterm.action.ActivateTabRelative(1)
+    },
+    {
         mods   = 'LEADER',
         key    = 'Enter',
         action = wezterm.action.ActivateCopyMode,
