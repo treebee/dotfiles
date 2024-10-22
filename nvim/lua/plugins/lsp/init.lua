@@ -110,7 +110,7 @@ return {
 
             require('mason-lspconfig').setup({
                 ensure_installed = {
-                    'tsserver', 'rust_analyzer', 'eslint', 'lua_ls', 'gopls',
+                    'rust_analyzer', 'eslint', 'lua_ls', 'gopls',
                     'elixirls', 'html', 'htmx', 'cssls', 'tailwindcss', 'pylsp',
                 },
                 handlers = {

@@ -1,5 +1,6 @@
 -- Pull in the wezterm API
 local wezterm = require 'wezterm'
+local sessionizer = require 'sessionizer'
 
 -- This will hold the configuration.
 local config = wezterm.config_builder()
@@ -104,6 +105,36 @@ config.keys = {
     split_nav('resize', 'j'),
     split_nav('resize', 'k'),
     split_nav('resize', 'l'),
+    {
+        mods = "LEADER",
+        key = "f",
+        action = wezterm.action_callback(sessionizer.open)
+    },
+    -- search for things that look like git hashes
+    {
+        key = 'H',
+        mods = 'SHIFT|CTRL',
+        action = wezterm.action.Search {
+            Regex = '[a-f0-9]{6,}',
+        },
+    },
+    -- search for the lowercase string "hash" matching the case exactly
+    {
+        key = 'H',
+        mods = 'SHIFT|CTRL',
+        action = wezterm.action.Search { CaseSensitiveString = 'hash' },
+    },
+    -- scroll
+    {
+        key = 'U',
+        mods = 'SHIFT|CTRL',
+        action = wezterm.action.ScrollToTop
+    },
+    {
+        key = 'D',
+        mods = 'SHIFT|CTRL',
+        action = wezterm.action.ScrollToBottom
+    }
 }
 
 -- and finally, return the configuration to wezterm

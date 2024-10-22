@@ -57,5 +57,7 @@ install-alacritty:
 
 install-wezterm:
 	rm -rf ~/.wezterm.lua
+	rm -f ~/.config/wezterm
 	ln -s `pwd`/wezterm.lua ~/.wezterm.lua
+	ln -s `pwd`/wezterm ~/.config/wezterm
 
