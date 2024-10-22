@@ -29,13 +29,13 @@ if vim.loop.os_gethostname() == "notebook-pam" then
     vim.api.nvim_create_autocmd("FileType", {
         pattern = { "python" },
         callback = function()
-            prefixes = {
+            local prefixes = {
                 vim.env.SOLUTE_DEV_ROOT,
                 vim.env.HOME .. "/workspace/tues",
                 vim.env.HOME .. "/GIT/pgpeek",
             }
-            path = vim.api.nvim_buf_get_name(0)
-            buf = vim.api.nvim_win_get_buf(0)
+            local path = vim.api.nvim_buf_get_name(0)
+            local buf = vim.api.nvim_win_get_buf(0)
             -- bail out if something looks like an installed module, we sometimes
             -- visit and even edit these for debugging, but we never want to lint
             -- or auto format them, we explicitly check them first because they
@@ -89,7 +89,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 
 
 lspconfig.rust_analyzer.setup({
-    on_attach = function(client, bufnr)
+    on_attach = function(_, bufnr)
         vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
     end,
     settings = {

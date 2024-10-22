@@ -16,11 +16,6 @@ return {
         end,
     },
     "folke/zen-mode.nvim",
-    {
-        "folke/trouble.nvim",
-        dependencies = { "nvim-tree/nvim-web-devicons" },
-        cmd = "Trouble"
-    },
     "norcalli/nvim-colorizer.lua",
     { "tpope/vim-fugitive", tag = "v3.7" },
     { "mbbill/undotree",    tag = "rel_6.1" },
