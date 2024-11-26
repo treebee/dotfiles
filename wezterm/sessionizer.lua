@@ -4,7 +4,13 @@ local act = wezterm.action
 
 local M = {}
 
+local is_mac = string.find(wezterm.target_triple, 'apple') ~= nil
 local fd = "/usr/bin/fdfind"
+
+if is_mac then
+    fd = "/opt/homebrew/bin/fd"
+end
+
 local dev = os.getenv("HOME") .. "/" .. "workspace"
 
 -- from https://github.com/wez/wezterm/discussions/4796
