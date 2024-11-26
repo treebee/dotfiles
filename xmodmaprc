@@ -10,5 +10,5 @@ keycode  18 = bracketright 9 bracketright 9 dead_grave dead_breve dead_grave
 keycode  19 = asterisk 0 asterisk 0
 keycode  21 = plus asciitilde plus asciitilde
 keycode  34 = dollar at dollar at
-keycode  35 = numbersign
+keycode  35 = numbersign percent numbersign percent
 keycode  64 = Multi_key
