@@ -19,6 +19,7 @@ M.open = function(window, pane)
         "--max-depth=4",
         "--prune",
         dev,
+        home .. "dotfiles"
         -- add more paths here
     })
 
