@@ -42,7 +42,6 @@ return {
             local cmp_autopairs = require("nvim-autopairs.completion.cmp")
             local luasnip = require("luasnip")
 
-            lsp_zero.preset("recommended")
             lsp_zero.extend_cmp()
 
             require("nvim-autopairs").setup()
@@ -56,7 +55,7 @@ return {
                         luasnip.lsp_expand(args.body)
                     end,
                 },
-                formatting = lsp_zero.cmp_format(),
+                formatting = lsp_zero.cmp_format({}),
                 mapping = cmp.mapping.preset.insert({
                     ['<C-Space>'] = cmp.mapping.complete(),
                     ['<C-p>'] = cmp.mapping.select_prev_item(cmp_select),
@@ -67,7 +66,7 @@ return {
                     ['<C-f>'] = cmp_action.luasnip_jump_forward(),
                     ['<C-b>'] = cmp_action.luasnip_jump_backward(),
                 }),
-                sourcs = cmp.config.sources({
+                sources = cmp.config.sources({
                     { name = "copilot" },
                     { name = "nvim_lsp" },
                     { name = "luasnip", max_item_count = 3 },
@@ -103,7 +102,7 @@ return {
             local lsp_zero = require('lsp-zero')
             lsp_zero.extend_lspconfig()
 
-            lsp_zero.on_attach(function(_client, bufnr)
+            lsp_zero.on_attach(function(_, bufnr)
                 -- see :help lsp-zero-keybindings
                 -- to learn the available actions
                 lsp_zero.default_keymaps({ buffer = bufnr })
@@ -111,7 +110,7 @@ return {
 
             require('mason-lspconfig').setup({
                 ensure_installed = {
-                    'rust_analyzer', 'eslint', 'lua_ls', 'gopls',
+                    'rust_analyzer', 'eslint', 'lua_ls', 'gopls', 'zls',
                     'elixirls', 'html', 'htmx', 'cssls', 'tailwindcss', 'pylsp',
                 },
                 handlers = {
