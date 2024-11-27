@@ -1,6 +1,7 @@
 -- Pull in the wezterm API
 local wezterm = require 'wezterm'
 local sessionizer = require 'sessionizer'
+local background = require 'background'
 
 -- This will hold the configuration.
 local config = wezterm.config_builder()
@@ -137,6 +138,8 @@ config.keys = {
         action = wezterm.action.ScrollToBottom
     }
 }
+
+for k, v in pairs(background) do config[k] = v end
 
 -- and finally, return the configuration to wezterm
 return config
