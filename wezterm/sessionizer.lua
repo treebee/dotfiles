@@ -24,8 +24,7 @@ M.open = function(window, pane)
         ".git$",
         "--max-depth=4",
         "--prune",
-        dev,
-        home .. "dotfiles"
+        home
         -- add more paths here
     })
 
