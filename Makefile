@@ -61,3 +61,6 @@ install-wezterm:
 	ln -s `pwd`/wezterm.lua ~/.wezterm.lua
 	ln -s `pwd`/wezterm ~/.config/wezterm
 
+install-aerospace:
+	rm -rf ~/.aerospace.toml
+	ln -s `pwd`/aerospace.toml ~/.aerospace.toml
