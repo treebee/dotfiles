@@ -64,3 +64,6 @@ install-wezterm:
 install-aerospace:
 	rm -rf ~/.aerospace.toml
 	ln -s `pwd`/aerospace.toml ~/.aerospace.toml
+
+install-mac-kblayouts:
+	cp -rf mac/layouts/* ~/Library/Keyboard\ Layouts/.
