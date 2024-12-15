@@ -3,6 +3,7 @@ local wezterm = require 'wezterm'
 local sessionizer = require 'sessionizer'
 local background = require 'background'
 
+local act = wezterm.action
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
@@ -52,6 +53,10 @@ local function split_nav(resize_or_move, key)
         end),
     }
 end
+
+wezterm.on('update-right-status', function(window, pane)
+    window:set_right_status(window:active_workspace())
+end)
 
 config.leader = { key = 'a', mods = 'CTRL', timeout_milliseconds = 1000 }
 config.keys = {
@@ -114,7 +119,7 @@ config.keys = {
     },
     -- search for things that look like git hashes
     {
-        key = 'H',
+        key = 'g',
         mods = 'SHIFT|CTRL',
         action = wezterm.action.Search {
             Regex = '[a-f0-9]{6,}',
@@ -122,7 +127,7 @@ config.keys = {
     },
     -- search for the lowercase string "hash" matching the case exactly
     {
-        key = 'H',
+        key = 'h',
         mods = 'SHIFT|CTRL',
         action = wezterm.action.Search { CaseSensitiveString = 'hash' },
     },
@@ -136,7 +141,40 @@ config.keys = {
         key = 'D',
         mods = 'SHIFT|CTRL',
         action = wezterm.action.ScrollToBottom
-    }
+    },
+
+    -- navigate workspaces
+    --
+    -- Switch to the default workspace
+    {
+        key = 'y',
+        mods = 'CTRL|SHIFT',
+        action = act.SwitchToWorkspace {
+            name = 'default',
+        },
+    },
+    -- Switch to a monitoring workspace, which will have `top` launched into it
+    {
+        key = 'm',
+        mods = 'CTRL|SHIFT',
+        action = act.SwitchToWorkspace {
+            name = 'monitoring',
+            spawn = {
+                args = { 'htop' },
+            },
+        },
+    },
+    -- Create a new workspace with a random name and switch to it
+    { key = 'i', mods = 'CTRL|SHIFT', action = act.SwitchToWorkspace },
+    -- Show the launcher in fuzzy selection mode and have it list all workspaces
+    -- and allow activating one.
+    {
+        key = 'f',
+        mods = 'CTRL|SHIFT',
+        action = act.ShowLauncherArgs {
+            flags = 'FUZZY|WORKSPACES',
+        },
+    },
 }
 
 for k, v in pairs(background) do config[k] = v end
