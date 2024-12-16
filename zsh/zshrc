@@ -59,10 +59,12 @@ source $ZSH/oh-my-zsh.sh
 
 [ -s "/usr/bin/virtualenvwrapper.sh" ] && source /usr/bin/virtualenvwrapper.sh
 if [ "$(uname)" "==" "Darwin" ]; then
-source virtualenvwrapper.sh
+    source virtualenvwrapper.sh
 
-#export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-eval "$(fzf --zsh)"
+    export PATH=$PATH:/opt/homebrew/bin:/opt/homebrew/opt/llvm/bin
+
+    #export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+    eval "$(fzf --zsh)"
 fi
 
 
