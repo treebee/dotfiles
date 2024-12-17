@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+pushd /tmp
+    rm -rf wezterm
+    git clone --depth=1 --branch=main --recursive https://github.com/wez/wezterm.git
+    cd wezterm
+    git submodule update --init --recursive
+    ./get-deps
+    cargo build --release -j 4
+    cp target/release/{wezterm,wezterm-gui,wezterm-mux-server} $HOME/bin/.
+popd
+

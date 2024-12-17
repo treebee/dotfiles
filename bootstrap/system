@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+if [[ "$(uname)" == "Darwin" ]]; then
+    echo "Setting up Mac"
+else
+    sudo apt install cmake build-essential libreadline-dev zlib1g-dev flex bison\
+        libxml2-dev libxslt-dev libssl-dev libxml2-utils xsltproc ccache pkg-config\
+        git tig i3 
+fi

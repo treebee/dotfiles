@@ -1,5 +1,15 @@
 install: install-zsh install-vim install-git install-xfiles install-tmux \
-  		 install-hg install-fontconfig install-dunst install-i3 install-nvim
+  		 install-hg install-fontconfig install-dunst install-i3 install-nvim \
+		 install-aerospace install-wezterm
+
+bootstrap-system:
+	bootstrap/system
+
+bootstrap-rust:
+	bootstrap/rust
+
+bootstrap-wezterm:
+	bootstrap/wezterm
 
 install-zsh:
 	rm -rf ~/.zshrc ~/.zshalias
