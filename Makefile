@@ -5,11 +5,17 @@ install: install-zsh install-vim install-git install-xfiles install-tmux \
 bootstrap-system:
 	bootstrap/system
 
+bootstrap-elixir:
+	bootstrap/elixir
+
 bootstrap-rust:
 	bootstrap/rust
 
 bootstrap-wezterm:
 	bootstrap/wezterm
+
+bootstrap-homebrew:
+	bootstrap/homebrew
 
 install-zsh:
 	rm -rf ~/.zshrc ~/.zshalias

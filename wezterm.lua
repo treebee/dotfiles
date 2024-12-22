@@ -142,6 +142,8 @@ config.keys = {
         mods = 'SHIFT|CTRL',
         action = wezterm.action.ScrollToBottom
     },
+    { key = 'UpArrow',   mods = 'SHIFT', action = act.ScrollByLine(-1) },
+    { key = 'DownArrow', mods = 'SHIFT', action = act.ScrollByLine(1) },
 
     -- navigate workspaces
     --
