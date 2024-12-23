@@ -14,6 +14,7 @@ alias ltr='ls -ltr'
 alias ..='cd ..'
 alias grep='grep -nI --color'
 alias ps='ps -ef'
+alias gg='git grep'
 
 # security
 alias rm='rm -i'
