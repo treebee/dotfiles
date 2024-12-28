@@ -7,19 +7,23 @@ if [[ "$(uname)" == "Darwin" ]]; then
     fd="/opt/homebrew/bin/fd"
 fi
 
+fzf_args=()
+if [[ "$TERM_PROGRAM" == "tmux" ]]; then
+    fzf="fzf-tmux"
+    fzf_args=("-p")
+else
+    fzf="fzf"
+fi
+
 if [[ $# -eq 1 ]]; then
     project_files=$1
 else
     project_files=("$HOME/dotfiles")
-    for f in $($fd -HI .git$ --min-depth=1 --max-depth=3 --prune ~/workspace ~/workspace/github ); do
-        option=$(echo "$f" | sed -e 's/\.git\/$//')
-        project_files+=("$option")
-    done;
-    if [[ "$TERM_PROGRAM" == "tmux" ]]; then
-        selected=$(echo "${project_files[@]}" | tr ' ' '\n' | uniq | fzf-tmux -p)
-    else
-        selected=$(echo "${project_files[@]}" | tr ' ' '\n' | uniq | fzf)  
-    fi
+    
+    selected=$(for f in $(fd -HI .git$ --min-depth=1 --max-depth=3 --prune ~ ~/workspace ~/workspace/github); do
+        echo $f
+    done | uniq | sed -e 's/\.git\/$//' | sed -e 's/\/$//' | $fzf "$fzf_args[@]")
+    
 fi
 
 if [[ -z $selected ]]; then
