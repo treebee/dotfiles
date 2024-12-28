@@ -1,21 +1,25 @@
 #!/usr/bin/env zsh
 
+tmux_running=$(pgrep tmux)
 fd="/usr/bin/fdfind"
 
-if [ "$(uname)" "==" "Darwin" ]; then
+if [[ "$(uname)" == "Darwin" ]]; then
     fd="/opt/homebrew/bin/fd"
 fi
 
 if [[ $# -eq 1 ]]; then
-    selected=$1
+    project_files=$1
 else
-    selected=()
-    for f in $(fd -HI .git$ --min-depth=1 --max-depth=2 --prune ~ ~/workspace ~/workspace/github); do
-        f=${f/\.git/\\n/}
-
-        selected+=(${f/\/\//})
+    project_files=("$HOME/dotfiles")
+    for f in $($fd -HI .git$ --min-depth=1 --max-depth=3 --prune ~/workspace ~/workspace/github ); do
+        option=$(echo "$f" | sed -e 's/\.git\/$//')
+        project_files+=("$option")
     done;
-    selected=$(echo $selected | fzf | awk '{$1=$1;print}')
+    if [[ "$TERM_PROGRAM" == "tmux" ]]; then
+        selected=$(echo "${project_files[@]}" | tr ' ' '\n' | uniq | fzf-tmux -p)
+    else
+        selected=$(echo "${project_files[@]}" | tr ' ' '\n' | uniq | fzf)  
+    fi
 fi
 
 if [[ -z $selected ]]; then
@@ -25,7 +29,6 @@ fi
 echo "selected: $selected"
 
 selected_name=$(basename "$selected" | tr . _)
-tmux_running=$(pgrep tmux)
 
 if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
     cd $selected
