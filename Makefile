@@ -14,6 +14,9 @@ bootstrap-rust:
 bootstrap-wezterm:
 	bootstrap/wezterm
 
+bootstrap-ghostty:
+	bootstrap/ghostty
+
 bootstrap-homebrew:
 	bootstrap/homebrew
 
@@ -48,8 +51,10 @@ install-xfiles:
 
 install-tmux:
 	rm -rf ~/.tmux.conf
-	ln -s `pwd`/tmux.conf ~/.tmux.conf
+	ln -s `pwd`/tmux/tmux.conf ~/.tmux.conf
 	git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm || bash -c "pushd ~/.tmux/plugins/tpm && git pull && popd"
+	rm -rf ~/.local/bin/tmux-sessionizer
+	ln -s `pwd`/tmux/tmux-sessionizer ~/.local/bin/tmux-sessionizer
 
 install-hg:
 	rm -rf ~/.hgrc
@@ -83,3 +88,7 @@ install-aerospace:
 
 install-mac-kblayouts:
 	cp -rf mac/layouts/* ~/Library/Keyboard\ Layouts/.
+
+install-ghostty:
+	rm -rf ~/.config/ghostty
+	ln -s `pwd`/ghostty ~/.config/ghostty

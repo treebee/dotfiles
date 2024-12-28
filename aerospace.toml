@@ -13,7 +13,8 @@ enable-normalization-opposite-orientation-for-nested-containers = true
 on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
  
 [mode.main.binding]
-alt-enter = 'exec-and-forget /opt/homebrew/bin/wezterm start --always-new-process'
+#alt-enter = 'exec-and-forget /opt/homebrew/bin/wezterm start --always-new-process'
+alt-enter = 'exec-and-forget /opt/homebrew/bin/ghostty'
 
 # i3 wraps focus by default
 alt-j =         'focus --boundaries-action wrap-around-the-workspace left'
@@ -92,3 +93,11 @@ run = "layout floating"
 [[on-window-detected]]
 if.app-id = "com.spotify.client"
 run = "move-node-to-workspace 10"
+
+[[on-window-detected]]
+if.app-id = "com.valvesoftware.steam"
+run = "move-node-to-workspace 8"
+
+[[on-window-detected]]
+if.app-name-regex-substring = "Epic Games Launcher"
+run = "move-node-to-workspace 7"

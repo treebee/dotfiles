@@ -87,15 +87,17 @@ config.keys = {
             mode = 'SwapWithActive',
         },
     },
+    { key = 'UpArrow',   mods = 'CTRL', action = act.ActivateTabRelative(-1) },
+    { key = 'DownArrow', mods = 'CTRL', action = act.ActivateTabRelative(1) },
     {
         mods   = "CTRL",
         key    = "LeftArrow",
-        action = wezterm.action.ActivateTabRelative(-1)
+        action = wezterm.action.SwitchWorkspaceRelative(-1)
     },
     {
         mods   = "CTRL",
         key    = "RightArrow",
-        action = wezterm.action.ActivateTabRelative(1)
+        action = wezterm.action.SwitchWorkspaceRelative(1)
     },
     {
         mods   = 'LEADER',

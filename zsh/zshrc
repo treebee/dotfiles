@@ -118,7 +118,9 @@ export VI_MODE_SET_CURSOR=true
 
 [ -s "$HOME/.zshrc.solute-dev" ] && source $HOME/.zshrc.solute-dev
 
-export TERM=screen-256color
+if [[ "$TERM_PROGRAM" != "ghostty" ]]; then
+    export TERM=screen-256color
+fi
 
 # bun
 export BUN_INSTALL="$HOME/.bun"

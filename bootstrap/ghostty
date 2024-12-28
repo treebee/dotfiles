@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+if [[ "$(uname)" == "Darwin" ]]; then
+    brew install ghostty
+    exit 0
+fi
+
+# taken from https://github.com/ThePrimeagen/dev/blob/master/runs/ghostty
+sudo apt update
+sudo apt install llvm lld llvm-dev liblld-dev clang libclang-dev libglib2.0-dev libgtk-4-dev libadwaita-1-dev git
+
+wget https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz -O /tmp/zig.tar.xz
+tar -xvf /tmp/zig.tar.xz -C $HOME/.local
+export PATH="$HOME/.local/zig-linux-x86_64-0.13.0:$PATH"
+
+mkdir -p $HOME/workspace/github
+GHOSTTY_DIR=$HOME/workspace/github/ghostty
+
+if [ ! -d "$GHOSTTY_DIR" ]; then
+git clone git@github.com:ghostty-org/ghostty.git $GHOSTTY_DIR
+
+(
+    cd $GHOSTTY_DIR
+    zig build -p $HOME/.local -Doptimize=ReleaseFast
+)

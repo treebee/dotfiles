@@ -1,0 +1,45 @@
+#!/usr/bin/env zsh
+
+fd="/usr/bin/fdfind"
+
+if [ "$(uname)" "==" "Darwin" ]; then
+    fd="/opt/homebrew/bin/fd"
+fi
+
+if [[ $# -eq 1 ]]; then
+    selected=$1
+else
+    selected=()
+    for f in $(fd -HI .git$ --min-depth=1 --max-depth=2 --prune ~ ~/workspace ~/workspace/github); do
+        f=${f/\.git/\\n/}
+
+        selected+=(${f/\/\//})
+    done;
+    selected=$(echo $selected | fzf | awk '{$1=$1;print}')
+fi
+
+if [[ -z $selected ]]; then
+    exit 0
+fi
+
+echo "selected: $selected"
+
+selected_name=$(basename "$selected" | tr . _)
+tmux_running=$(pgrep tmux)
+
+if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
+    cd $selected
+    tmux new-session -s $selected_name -c $selected
+    exit 0
+fi
+
+if ! tmux has-session -t=$selected_name 2> /dev/null; then
+    cd $selected
+    tmux new-session -ds $selected_name -c $selected
+fi
+
+if [[ -z $TMUX ]]; then
+    tmux attach-session -t $selected_name
+else
+    tmux switch-client -t $selected_name
+fi
