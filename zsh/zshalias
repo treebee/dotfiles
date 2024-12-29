@@ -1,7 +1,6 @@
 # ls
 if [ "$(uname)" "==" "Darwin" ]; then 
     alias ls='ls --color -phF'
-    alias cw='tmux-sessionizer'
 else
     alias ls='ls --color -phFX --group-directories-first'
 fi
@@ -41,3 +40,6 @@ alias code="code --enable-proposed-api ms-vscode-remote.remote-containers"
 alias iex='iex --erl "-kernel shell_history enabled"'
 
 [ -s $HOME/nvim/bin/nvim ] && alias nvim='$HOME/nvim/bin/nvim'
+
+alias t="tmux-sessionizer"
+alias ts="tmux-switch"

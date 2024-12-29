@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+selected=$(tmux list-sessions | fzf-tmux -p 70%)
+if [[ "$TERM_PROGRAM" == "tmux" ]]; then
+    tmux switch-client -t ${selected%%:*}
+else
+    tmux attach -t ${selected%%:*}
+fi

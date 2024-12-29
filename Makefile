@@ -55,6 +55,8 @@ install-tmux:
 	git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm || bash -c "pushd ~/.tmux/plugins/tpm && git pull && popd"
 	rm -rf ~/.local/bin/tmux-sessionizer
 	ln -s `pwd`/tmux/tmux-sessionizer ~/.local/bin/tmux-sessionizer
+	rm -rf ~/.local/bin/tmux-switch
+	ln -s `pwd`/tmux/tmux-switch ~/.local/bin/tmux-switch
 
 install-hg:
 	rm -rf ~/.hgrc
