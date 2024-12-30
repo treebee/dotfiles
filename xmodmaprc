@@ -11,4 +11,5 @@ keycode  19 = asterisk 0 asterisk 0
 keycode  21 = plus asciitilde plus asciitilde
 keycode  34 = dollar at dollar at
 keycode  35 = numbersign percent numbersign percent
+keycode  49 = grave asciicircum grave asciicircum
 keycode  64 = Multi_key
