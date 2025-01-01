@@ -29,4 +29,5 @@ fi
 
 cd $GHOSTTY_DIR
 git checkout $GHOSTTY_TAG
+
 zig build -p $HOME/.local -Doptimize=ReleaseFast
