@@ -27,12 +27,14 @@ selected_name=$(basename "$selected" | tr . _)
 if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
     cd $selected
     tmux new-session -s $selected_name -c $selected
+    tmux send-keys -t $selected_name ". ~/dotfiles/tmux/init-session" c-M
     exit 0
 fi
 
-if ! tmux has-session -t=$selected_name 2> /dev/null; then
+if ! tmux has-session -t=$selected_name 6> /dev/null; then
     cd $selected
     tmux new-session -ds $selected_name -c $selected
+    tmux send-keys -t $selected_name ". ~/dotfiles/tmux/init-session" c-M
 fi
 
 if [[ -z $TMUX ]]; then

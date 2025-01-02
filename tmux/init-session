@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+if [[ "$(pwd)" == "$HOME" ]]; then
+    clear
+    return
+fi
+
+[ -z pyproject.toml ] || [ -z setup.py ] && wo .
+
+tmux new-window -dn scratch
+nvim .
+clear
