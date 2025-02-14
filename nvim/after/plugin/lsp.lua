@@ -65,9 +65,7 @@ if vim.loop.os_gethostname() == "notebook-pam" then
     })
 
     require("lspconfig").pylsp.setup({
-        --cmd = {vim.env["HOME"] .. "/.virtualenvs/solute-pyformat/bin/pylsp", "--log-file", "/tmp/lsplog", "-v"},
-        cmd = { vim.env["HOME"] .. "/.virtualenvs/solute-pyformat/bin/pylsp" },
-        --cmd = {vim.env["HOME"] .. "/.local/bin/pylsp"},
+        cmd = { vim.env["HOME"] .. "/.local/share/uv/tools/solute-pyformat/bin/pylsp" },
         settings = {
             pylsp = {
                 plugins = {
