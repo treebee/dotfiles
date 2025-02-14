@@ -11,6 +11,9 @@ bootstrap-elixir:
 bootstrap-rust:
 	bootstrap/rust
 
+bootstrap-zig:
+	bootstrap/zig
+
 bootstrap-wezterm:
 	bootstrap/wezterm
 

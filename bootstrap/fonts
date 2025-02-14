@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+pushd /tmp/
+  mkdir monaspace
+  pushd monaspace
+    wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/Monaspace.tar.xz
+    tar xf Monaspace.tar.xz
+    cp -f *.otf ~/.fonts/.
+    sudo fc-cache -f -v
+  popd
+popd
