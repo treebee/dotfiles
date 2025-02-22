@@ -52,7 +52,7 @@ plugins=(git rust vi-mode)
 
 # User configuration
 export PATH=$HOME/nvim/bin:$HOME/.mix/escripts:$HOME/bin:$HOME/.local/bin:/usr/local/bin:/opt/android-sdk/tools:$PATH
-export PATH="$HOME/.local/zig-linux-x86_64-0.13.0:$PATH"
+export PATH=$HOME/.local/zig:$PATH
 # export MANPATH="/usr/local/man:$MANPATH"
 
 source $ZSH/oh-my-zsh.sh

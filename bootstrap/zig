@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+
+if [[ "$(uname)" == "Darwin" ]]; then
+    ZIG_VERSION=zig-macos-aarch64-0.14.0-dev.3286+05d8b565a
+else
+    ZIG_VERSION=zig-linux-x86_64-0.14.0-dev.3286+05d8b565a
+fi
+
+rm -f /tmp/zig.tar.xz
+curl https://ziglang.org/builds/$ZIG_VERSION.tar.xz -o /tmp/zig.tar.xz
+
+rm -rf $HOME/.local/zig
+tar -xvf /tmp/zig.tar.xz -C $HOME/.local
+mv $HOME/.local/$ZIG_VERSION $HOME/.local/zig
