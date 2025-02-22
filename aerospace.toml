@@ -83,11 +83,22 @@ esc = 'mode main'
 
 [workspace-to-monitor-force-assignment]
 1 = 2
+2 = 2
+7 = 2
+8 = 2
 9 = 1
 10 = 1
 
 [[on-window-detected]]
+if.app-name-regex-substring = "GameMaker"
+run = "layout floating"
+
+[[on-window-detected]]
 if.app-name-regex-substring = "flummy"
+run = "layout floating"
+
+[[on-window-detected]]
+if.app-name-regex-substring = "App"
 run = "layout floating"
 
 [[on-window-detected]]
