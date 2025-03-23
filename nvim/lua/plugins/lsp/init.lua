@@ -109,9 +109,10 @@ return {
             end)
 
             require('mason-lspconfig').setup({
+                automatic_installation = true,
                 ensure_installed = {
                     'rust_analyzer', 'eslint', 'lua_ls', 'gopls', 'zls',
-                    'elixirls', 'html', 'htmx', 'cssls', 'tailwindcss', 'pylsp',
+                    'elixirls', 'html', 'cssls', 'tailwindcss', 'pylsp',
                 },
                 handlers = {
                     lsp_zero.default_setup,
