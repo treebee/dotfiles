@@ -2,9 +2,9 @@
 
 
 if [[ "$(uname)" == "Darwin" ]]; then
-    ZIG_VERSION=zig-macos-aarch64-0.14.0-dev.3286+05d8b565a
+    ZIG_VERSION=zig-macos-aarch64-0.14.0
 else
-    ZIG_VERSION=zig-linux-x86_64-0.14.0-dev.3286+05d8b565a
+    ZIG_VERSION=zig-linux-x86_64-0.14.0
 fi
 
 rm -f /tmp/zig.tar.xz
