@@ -112,3 +112,7 @@ run = "move-node-to-workspace 8"
 [[on-window-detected]]
 if.app-name-regex-substring = "Epic Games Launcher"
 run = "move-node-to-workspace 7"
+
+[[on-window-detected]]
+if.app-name-regex-substring = "MTGA"
+run = "move-node-to-workspace 8"
