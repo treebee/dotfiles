@@ -97,3 +97,9 @@ install-mac-kblayouts:
 install-ghostty:
 	rm -rf ~/.config/ghostty
 	ln -s `pwd`/ghostty ~/.config/ghostty
+
+install-xkb:
+	sudo cp xkb/symbols/us-prog /usr/share/X11/xkb/symbols/.
+	rm ~/.config/xkb
+	ln -s `pwd`/xkb ~/.config/xkb
+
