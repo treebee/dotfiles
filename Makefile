@@ -69,7 +69,7 @@ install-i3:
 	ln -s `pwd`/i3 ~/.i3
 
 install-sway:
-	rm ~/.config/sway
+	rm -f ~/.config/sway
 	ln -s `pwd`/sway ~/.config/sway
 
 install-dunst:
@@ -104,6 +104,9 @@ install-mac-kblayouts:
 
 install-xkb:
 	sudo cp xkb/symbols/us-prog /usr/share/X11/xkb/symbols/.
-	rm ~/.config/xkb
+	rm -f ~/.config/xkb
 	ln -s `pwd`/xkb ~/.config/xkb
 
+install-waybar:
+	rm -f ~/.config/waybar
+	ln -s `pwd`/waybar ~/.config/waybar

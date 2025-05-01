@@ -14,7 +14,7 @@ set $down j
 set $up k
 set $right l
 # Your preferred terminal emulator
-set $term /home/pam/.local/bin/ghostty
+set $term ~/.local/bin/ghostty
 # Your preferred application launcher
 # Note: pass the final command to swaymsg so that the resulting window can be opened
 # on the original workspace that the command was run on.
@@ -25,7 +25,7 @@ include /etc/sway/config-vars.d/*
 ### Output configuration
 #
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
-output * bg /home/pam/Pictures/spiderman-miles-morales-into-the-spider-verse-uhdpaper.com-4K-8.1727.jpg fill
+output * bg ~/Pictures/background.jpg fill
 #
 # Example configuration:
 #
@@ -62,6 +62,10 @@ exec swayidle -w \
 # Read `man 5 sway-input` for more information about this section.
 input type:keyboard {
     xkb_layout "us-prog"
+}
+
+input "1:1:AT_Translated_Set_2_keyboard" {
+    xkb_options caps:escape
 }
 ### Key bindings
 #
@@ -205,18 +209,21 @@ bindsym $mod+r mode "resize"
 # Status Bar:
 #
 # Read `man 5 sway-bar` for more information about this section.
-bar {
-    position top
+# bar {
+#     position top
+#
+#     # When the status_command prints a new line to stdout, swaybar updates.
+#     # The default just shows the current date and time.
+#     status_command while date +'%Y-%m-%d %X'; do sleep 1; done
+#
+#     colors {
+#         statusline #ffffff
+#         background #323232
+#         inactive_workspace #32323200 #32323200 #5c5c5c
+#     }
+# }
 
-    # When the status_command prints a new line to stdout, swaybar updates.
-    # The default just shows the current date and time.
-    status_command while date +'%Y-%m-%d %X'; do sleep 1; done
-
-    colors {
-        statusline #ffffff
-        background #323232
-        inactive_workspace #32323200 #32323200 #5c5c5c
-    }
-}
+bar swaybar_command waybar
 
 include /etc/sway/config.d/*
+
