@@ -232,5 +232,10 @@ default_floating_border none
 titlebar_padding 1
 titlebar_border_thickness 0
 
+# start notification daemon
+exec swaync
+# toggle control center
+bindsym $mod+Shift+n exec swaync-client -t -sw
+
 include /etc/sway/config.d/*
 

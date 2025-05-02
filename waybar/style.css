@@ -96,3 +96,15 @@ tooltip {
     border: 2px solid #c7ab7a;
     color: #c14a4a;
 }
+
+#custom-power {
+    color: #ddc7a1;
+    padding-right: 5px;
+}
+
+#custom-notification {
+    font-family: "NotoSansMono Nerd Font";
+    color: #c14a4a;
+    padding-left: 5px;
+    padding-right: 5px;
+}
