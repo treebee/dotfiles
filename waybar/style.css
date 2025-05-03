@@ -28,15 +28,23 @@ tooltip {
 #temperature,
 #backlight,
 .custom-spotify,
-#custom-spotify {
+#custom-spotify,
+#custom-todos {
     margin: 6px 6px 6px 0px;
     padding: 2px 8px;
 }
 
-#workspaces {
+#workspaces,
+#clock,
+#custom-todos {
     background-color: #303536;
     margin: 6px 0px 6px 6px;
     border: 2px solid #434a4c;
+}
+
+#clock,
+#custom-todos {
+    color: #c7ab7a;
 }
 
 #workspaces button {

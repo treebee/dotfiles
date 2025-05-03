@@ -13,7 +13,8 @@
         "custom/spotify",
     ],
     "modules-center": [
-        "clock"
+        "custom/todos",
+        "clock",
     ],
     "modules-right": [
         "custom/notification",
@@ -104,6 +105,17 @@
     "battery#bat2": {
         "bat": "BAT2"
     },
+    "power-profiles-daemon": {
+      "format": "{icon}",
+      "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+      "tooltip": true,
+      "format-icons": {
+        "default": "",
+        "performance": "",
+        "balanced": "",
+        "power-saver": ""
+      }
+    },
     "network": {
         // "interface": "wlp2*", // (Optional) To force the use of this interface
         "format-wifi": "{essid} ({signalStrength}%) ",
@@ -168,5 +180,13 @@
         "on-click": "swaync-client -t -sw",
         "on-click-right": "swaync-client -d -sw",
         "escape": true
+    },
+    "custom/todos": {
+        "format": "{}",
+        "tooltip": true,
+        "return-type": "json",
+        "exec": "python3 $HOME/.config/waybar/modules/waybar_todos.py",
+        "on-click": "python3 $HOME/.config/waybar/modules/waybar_todos.py toggle",
+        "on-click-right": "python3 $HOME/.config/waybar/modules/waybar_todos.py remove",
     }
-}
+ }

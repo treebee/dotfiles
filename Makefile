@@ -110,3 +110,6 @@ install-xkb:
 install-waybar:
 	rm -f ~/.config/waybar
 	ln -s `pwd`/waybar ~/.config/waybar
+	rm -f ~/bin/todos.py
+	ln -s `pwd`/waybar/modules/todos.py ~/bin/todos.py
+
