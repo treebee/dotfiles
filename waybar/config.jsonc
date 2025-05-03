@@ -10,13 +10,13 @@
         "sway/workspaces",
         "sway/mode",
         "sway/scratchpad",
-        "custom/media",
-        "custom/notification"
+        "custom/spotify",
     ],
     "modules-center": [
-        "clock",
+        "clock"
     ],
     "modules-right": [
+        "custom/notification",
         "pulseaudio",
         "network",
         "cpu",
@@ -25,7 +25,7 @@
         "backlight",
         "battery",
         "battery#bat2",
-        "tray",
+        "tray"
     ],
     // Modules configuration
     "sway/workspaces": {
@@ -132,17 +132,22 @@
         },
         "on-click": "pavucontrol"
     },
-    "custom/media": {
-        "format": "{icon} {text}",
-        "return-type": "json",
-        "max-length": 40,
+    "custom/spotify": {
+        "format": "{icon} {}",
         "format-icons": {
             "spotify": "",
             "default": "🎜"
         },
         "escape": true,
-        "exec": "$HOME/.config/waybar/mediaplayer.py 2> /dev/null" // Script in resources folder
-        // "exec": "$HOME/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
+        "return-type": "json",
+        "max-length": 60,
+        "on-click": "playerctl -p spotify play-pause",
+        "on-click-right": "killall spotify",
+        "smooth-scrolling-threshold": 5,
+        "on-scroll-up" : "playerctl -p spotify next",
+        "on-scroll-down" : "playerctl -p spotify previous",
+        "exec": "/usr/bin/python3 $HOME/.config/waybar/modules/mediaplayer.py --player spotify --enable-logging 2> /dev/null",
+        "exec-if": "pgrep spotify"
     },
     "custom/notification": {
         "tooltip": false,
