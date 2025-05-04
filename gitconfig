@@ -15,7 +15,7 @@ tool = meld
 
 [core]
 pager = delta
-editor = /usr/bin/vim
+editor = nvim
 
 [color]
 ui = auto
