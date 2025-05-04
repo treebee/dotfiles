@@ -3,7 +3,7 @@
     border-radius: 0;
     min-height: 0;
     font-family: "iosevka nerd font";
-    font-weight: 500;
+    font-weight: bold;
     font-size: 14px;
     padding: 0;
 }
@@ -37,9 +37,7 @@ tooltip {
 #workspaces,
 #clock,
 #custom-todos {
-    background-color: #303536;
     margin: 6px 0px 6px 6px;
-    border: 2px solid #434a4c;
 }
 
 #clock,
@@ -64,8 +62,6 @@ tooltip {
 }
 
 #clock {
-    background-color: #303536;
-    border: 2px solid #434a4c;
     color: #d4be98;
 }
 
@@ -85,8 +81,8 @@ tooltip {
 #pulseaudio,
 #temperature,
 #backlight {
-    background-color: #b35900;
-    border: 2px solid #c7ab7a;
+    background-color: #b37c12;
+    border: 2px solid #000000;
     color: #1d2021;
 }
 

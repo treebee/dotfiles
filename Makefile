@@ -112,4 +112,4 @@ install-waybar:
 	ln -s `pwd`/waybar ~/.config/waybar
 	rm -f ~/bin/todos.py
 	ln -s `pwd`/waybar/modules/todos.py ~/bin/todos.py
-
+	sudo apt install playerctl libplayerctl2 libplayerctl-dev
