@@ -21,11 +21,12 @@ set $term ~/.local/bin/ghostty
 set $menu dmenu_path | wmenu | xargs swaymsg exec --
 
 include /etc/sway/config-vars.d/*
+include /etc/sway/config.d/*
 
 ### Output configuration
 #
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
-output * bg ~/Pictures/background.jpg fill
+output * bg $HOME/Pictures/background.jpg fill
 #
 # Example configuration:
 #
@@ -239,5 +240,4 @@ exec swaync
 # toggle control center
 bindsym $mod+Shift+n exec swaync-client -t -sw
 
-include /etc/sway/config.d/*
 

@@ -185,8 +185,8 @@
         "format": "{}",
         "tooltip": true,
         "return-type": "json",
-        "exec": "python3 $HOME/.config/waybar/modules/waybar_todos.py",
-        "on-click": "python3 $HOME/.config/waybar/modules/waybar_todos.py toggle",
-        "on-click-right": "python3 $HOME/.config/waybar/modules/waybar_todos.py remove",
+        "exec": "python3 $HOME/.config/waybar/modules/todos.py",
+        "on-click": "python3 $HOME/.config/waybar/modules/todos.py toggle",
+        "on-click-right": "python3 $HOME/.config/waybar/modules/todos.py remove",
     }
  }
