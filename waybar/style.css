@@ -9,8 +9,7 @@
 }
 
 window#waybar {
-    background: #1d2021;
-    border: 2px solid #3c3836;
+    background: transparent;
 }
 
 tooltip {
@@ -32,12 +31,19 @@ tooltip {
 #custom-todos {
     margin: 6px 6px 6px 0px;
     padding: 2px 8px;
+    background: black;
+    border-radius: 6px;
 }
 
 #workspaces,
 #clock,
 #custom-todos {
+    background: black;
     margin: 6px 0px 6px 6px;
+}
+
+#workspaces {
+    background: transparent;
 }
 
 #clock,
@@ -49,12 +55,15 @@ tooltip {
     all: initial;
     min-width: 0;
     box-shadow: inset 0 -3px transparent;
-    padding: 2px 4px;
+    padding: 4px 4px;
     color: #c7ab7a;
+    background: black;
+    margin: 2px 2px;
+    border-radius: 6px;
 }
 
 #workspaces button.focused {
-    color: #ddc7a1;
+    color: #00aaff;
 }
 
 #workspaces button.urgent {
@@ -63,11 +72,6 @@ tooltip {
 
 #clock {
     color: #d4be98;
-}
-
-#tray {
-    background-color: #d4be98;
-    border: 2px solid #c7ab7a;
 }
 
 #battery {
@@ -81,9 +85,9 @@ tooltip {
 #pulseaudio,
 #temperature,
 #backlight {
-    background-color: #b37c12;
-    border: 2px solid #000000;
-    color: #1d2021;
+    background-color: black;
+    border: 2px solid #b37c12;
+    color: #b37c12;
 }
 
 #cpu.critical,
@@ -105,14 +109,17 @@ tooltip {
 
 #custom-power {
     color: #ddc7a1;
-    padding-right: 5px;
+    padding-right: 2px;
 }
 
 #custom-notification {
     font-family: "NotoSansMono Nerd Font";
     color: #c14a4a;
+    margin: 6px 6px 6px 6px;
     padding-left: 5px;
     padding-right: 5px;
+    background: black;
+    border-radius: 6px;
 }
 
 .custom-spotify,

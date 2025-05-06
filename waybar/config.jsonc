@@ -13,10 +13,10 @@
         "custom/spotify",
     ],
     "modules-center": [
-        "custom/todos",
         "clock",
     ],
     "modules-right": [
+        "custom/todos",
         "custom/notification",
         "pulseaudio",
         "network",
@@ -182,7 +182,7 @@
         "escape": true
     },
     "custom/todos": {
-        "format": "{}",
+        "format": "☐ {} ",
         "tooltip": true,
         "return-type": "json",
         "exec": "python3 $HOME/.config/waybar/modules/todos.py",
