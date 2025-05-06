@@ -95,6 +95,8 @@ input "1:1:AT_Translated_Set_2_keyboard" {
     bindsym $mod+Shift+p exec swaylock -f -c 000000
     # Exit sway (logs you out of your Wayland session)
     bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
+
+    bindsym $mod+Shift+g exec slurp | grim -g - "$HOME/Pictures/screenshots/$(date +'%Y-%m-%d_%H:%M:%S').jpg"
 #
 # Moving around:
 #
