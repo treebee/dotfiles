@@ -77,7 +77,7 @@ tooltip {
 
 #battery {
     background-color: #739900;
-    border: 2px solid #c7ab7a;
+    border: 2px solid black;
 }
 
 #cpu,
@@ -87,7 +87,6 @@ tooltip {
 #temperature,
 #backlight {
     background-color: black;
-    border: 2px solid #b37c12;
     color: #b37c12;
 }
 
@@ -96,7 +95,6 @@ tooltip {
 #temperature.critical,
 #backlight.critical {
     background-color: #ddc7a1;
-    border: 2px solid #c7ab7a;
     color: #c14a4a;
 }
 
@@ -104,7 +102,6 @@ tooltip {
 #battery.critical,
 #battery.urgent {
     background-color: #ddc7a1;
-    border: 2px solid #c7ab7a;
     color: #c14a4a;
 }
 
