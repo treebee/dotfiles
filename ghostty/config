@@ -18,3 +18,4 @@ font-feature = ss08
 background-opacity = 0.9
 gtk-titlebar = false
 macos-titlebar-style = hidden
+gtk-adwaita = true

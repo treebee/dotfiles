@@ -232,7 +232,7 @@ bar {
     swaybar_command waybar
 }
 
-default_border pixel 1
+default_border pixel 0
 default_floating_border none
 titlebar_padding 1
 titlebar_border_thickness 0
