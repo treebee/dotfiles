@@ -20,13 +20,9 @@ tooltip {
 
 #clock,
 #tray,
-#cpu,
-#memory,
 #battery,
 #network,
 #pulseaudio,
-#temperature,
-#backlight,
 .custom-spotify,
 #custom-spotify,
 #custom-todos {
@@ -34,6 +30,14 @@ tooltip {
     padding: 2px 8px;
     background: black;
     border-radius: 6px;
+}
+
+#memory,
+#cpu,
+#temperature,
+#backlight {
+    margin: 6px 0px 6px 0px;
+    padding: 2px 8px;
 }
 
 #workspaces,
