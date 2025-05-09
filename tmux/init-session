@@ -5,8 +5,8 @@ if [[ "$(pwd)" == "$HOME" ]]; then
     return
 fi
 
-[ -f pyproject.toml ] || [ -f setup.py ] && wo .
 
 tmux new-window -dn scratch
+[ -f pyproject.toml ] || [ -f setup.py ] && wo . && tmux send-keys -t "scratch" 'wo .' Enter
 nvim .
 clear
