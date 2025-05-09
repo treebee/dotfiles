@@ -69,8 +69,9 @@ install-i3:
 	ln -s `pwd`/i3 ~/.i3
 
 install-sway:
-	rm -f ~/.config/sway
+	rm -f ~/.config/sway ~/.config/swaync
 	ln -s `pwd`/sway ~/.config/sway
+	ln -s `pwd`/swaync ~/.config/swaync
 
 install-dunst:
 	rm -rf ~/.config/dunst
