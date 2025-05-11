@@ -10,15 +10,15 @@ config.min_scroll_bar_height = '2cell'
 config.colors = {
     scrollbar_thumb = 'white',
 }
-
-config.background = {
-    -- This is the deepest/back-most layer. It will be rendered first
-    {
-        source = {
-            File = home .. "Pictures/terminal.png",
-        },
-        hsb = dimmer,
-    },
-}
+config.window_background_opacity = 0.85
+-- config.background = {
+--     -- This is the deepest/back-most layer. It will be rendered first
+--     {
+--         source = {
+--             File = home .. "Pictures/terminal.png",
+--         },
+--         hsb = dimmer,
+--     },
+-- }
 
 return config
