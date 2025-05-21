@@ -23,7 +23,7 @@ vim.diagnostic.config({
     virtual_text = true
 })
 
-if vim.loop.os_gethostname() == "notebook-pam" then
+if vim.uv.os_gethostname() == "notebook-pam" then
     -- Solute stuff
     -- Only show diagnostics for "our" code,
     vim.api.nvim_create_autocmd("FileType", {
@@ -55,26 +55,9 @@ if vim.loop.os_gethostname() == "notebook-pam" then
         end,
     })
 
-    -- Format Python code on-save
-    vim.api.nvim_create_autocmd("BufWritePre", {
-        callback = function()
-            if vim.bo.filetype == "python" then
-                vim.lsp.buf.format({ async = false })
-            end
-        end
-    })
 
-    require("lspconfig").pylsp.setup({
+    vim.lsp.config("pylsp", {
         cmd = { vim.env["HOME"] .. "/.local/share/uv/tools/solute-pyformat/bin/pylsp" },
-        settings = {
-            pylsp = {
-                plugins = {
-                    solute_pyformat = {
-                        enabled = true,
-                    },
-                },
-            },
-        },
     })
 end
 
