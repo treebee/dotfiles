@@ -17,6 +17,6 @@ return {
     },
     "folke/zen-mode.nvim",
     "norcalli/nvim-colorizer.lua",
-    { "tpope/vim-fugitive", tag = "v3.7" },
-    { "mbbill/undotree",    tag = "rel_6.1" },
+    { "tpope/vim-fugitive" },
+    { "mbbill/undotree" },
 }

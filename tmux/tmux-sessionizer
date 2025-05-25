@@ -12,7 +12,7 @@ if [[ $# -eq 1 ]]; then
 else
     project_files=("$HOME/dotfiles")
     
-    selected=$(for f in $($fd -HI .git$ --min-depth=1 --max-depth=3 --prune ~ ~/workspace ~/workspace/github); do
+    selected=$(for f in $($fd -HI .git$ --min-depth=1 --max-depth=3 --prune ~ ~/workspace/github); do
         echo $f
     done | uniq | sed -E 's/\.git\/?$//' | sed -e 's/\/$//' | fzf-tmux -p 70%)
     
