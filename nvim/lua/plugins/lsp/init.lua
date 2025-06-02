@@ -1,75 +1,82 @@
 return {
     {
-        "j-hui/fidget.nvim",
-        config = function()
-            require("fidget").setup({})
-        end,
-    },
-    {
-        'VonHeikemen/lsp-zero.nvim',
-        branch = 'v3.x',
-        lazy = true,
-        config = false,
-        init = function()
-            -- Disable automatic setup, we are doing it manually
-            vim.g.lsp_zero_extend_cmp = 0
-            vim.g.lsp_zero_extend_lspconfig = 0
-        end,
-    },
-    {
-        'williamboman/mason.nvim',
-        lazy = false,
-        config = true,
-    },
-
-    -- LSP
-    {
         'neovim/nvim-lspconfig',
-        cmd = { 'LspInfo', 'LspInstall', 'LspStart' },
-        event = { 'BufReadPre', 'BufNewFile' },
+        cmd = { 'LspInfo', 'LspInstall', 'LspUninstall', 'Mason' },
+        event = { 'BufReadPost', 'BufNewFile' },
         dependencies = {
-            { 'williamboman/mason-lspconfig.nvim' },
-            "folke/neodev.nvim",
-            { 'saghen/blink.cmp' },
+            "williamboman/mason.nvim",
+            "williamboman/mason-lspconfig.nvim",
+            "WhoIsSethDaniel/mason-tool-installer.nvim",
+            "saghen/blink.cmp",
+            "j-hui/fidget.nvim",
         },
         config = function()
-            require("neodev").setup()
-            local lspconfig = require('lspconfig')
-
-            -- This is where all the LSP shenanigans will live
-            local lsp_zero = require('lsp-zero')
-            lsp_zero.extend_lspconfig()
-
-            lsp_zero.on_attach(function(_, bufnr)
-                -- see :help lsp-zero-keybindings
-                -- to learn the available actions
-                lsp_zero.default_keymaps({ buffer = bufnr })
-            end)
-
-            local capabilities = require('blink.cmp').get_lsp_capabilities()
-
-            require('mason-lspconfig').setup({
-                ensure_installed = {
-                    'rust_analyzer', 'eslint', 'lua_ls', 'gopls', 'zls',
-                    'elixirls', 'html', 'htmx', 'cssls', 'tailwindcss', 'pylsp',
-                },
-                handlers = {
-                    lsp_zero.default_setup,
-                    rust_analyzer = lsp_zero.noop,
-                    lua_ls = function()
-                        -- (Optional) Configure lua language server for neovim
-                        local lua_opts = lsp_zero.nvim_lua_ls()
-                        lua_opts.capabilities = capabilities
-                        lspconfig.lua_ls.setup(lua_opts)
-                    end,
-                }
+            require("elixir").setup({
             })
+            local servers = {
+                bashls = {},
+                cssls = {},
+                -- elixirls = {
+                --     cmd = { vim.env.HOME .. "/.local/share/nvim/mason/bin/elixir-ls" },
+                -- },
+                -- html = {},
+                jsonls = {},
+                lua_ls = {
+                    settings = {
+                        Lua = {
+                            runtime = { version = "LuaJIT" },
+                            workspace = {
+                                checkThirdParty = false,
+                                library = {
+                                    "${3rd}/luv/library",
+                                    unpack(vim.api.nvim_get_runtime_file("", true)),
+                                },
+                            },
+                            telemetry = { enabled = false },
+                        },
+                    },
+                },
+                -- nextls = {
+                --     cmd = { vim.env.HOME .. "/.local/share/nvim/mason/bin/nextls", "--stdio" },
+                -- },
+                pylsp = {},
+                sqlls = {},
+                tailwindcss = {},
+                yamlls = {},
+                rust_analyzer = {
+                    check = { command = "clippy", features = "all" },
+                },
+                zls = {},
+            }
+            local formatters = {}
+
+            local ensure_installed = vim.tbl_keys(vim.tbl_deep_extend("force", {}, servers, formatters))
+
+            require("mason-tool-installer").setup({
+                auto_update = true,
+                run_on_start = true,
+                start_delay = 3000,
+                debounce_hours = 12,
+                ensure_installed = ensure_installed,
+            })
+
+            local capabilities = vim.lsp.protocol.make_client_capabilities()
+            capabilities = vim.tbl_deep_extend("force", capabilities, require('blink.cmp').get_lsp_capabilities())
+
+            for name, config in pairs(servers) do
+                require("lspconfig")[name].setup({
+                    autostart = config.autostart,
+                    cmd = config.cmd,
+                    capabilities = capabilities,
+                    filetypes = config.filetypes,
+                    handlers = vim.tbl_deep_extend("force", {}, config.handlers or {}),
+                    settings = config.settings,
+                    root_dir = config.root_dir,
+                })
+            end
+
+            require("mason").setup()
+            require('mason-lspconfig').setup()
         end
     },
-    {
-        'ray-x/lsp_signature.nvim',
-        event = "VeryLazy",
-        opts = {},
-        config = function(_, opts) require 'lsp_signature'.setup(opts) end
-    }
 }
