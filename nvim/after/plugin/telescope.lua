@@ -5,7 +5,8 @@ vim.keymap.set('n', '<leader>ps', function()
     builtin.grep_string({ search = vim.fn.input("Grep > ") })
 end)
 vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
-
+vim.keymap.set("n", "<space>fb", builtin.buffers)
+vim.keymap.set("n", "<space>/", builtin.current_buffer_fuzzy_find)
 
 vim.keymap.set('n', '<leader>nn', function()
     builtin.find_files({ cwd = "~/.noty" })
