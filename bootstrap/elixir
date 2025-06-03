@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 curl -fsSO https://elixir-lang.org/install.sh
-sh install.sh elixir@1.18.2 otp@27.1.2
+sh install.sh elixir@1.18.4 otp@27.3.4
 installs_dir=$HOME/.elixir-install/installs
-export PATH=$installs_dir/otp/27.1.2/bin:$PATH
-export PATH=$installs_dir/elixir/1.18.2-otp-27/bin:$PATH
+export PATH=$installs_dir/otp/27.3.4/bin:$PATH
+export PATH=$installs_dir/elixir/1.18.4-otp-27/bin:$PATH
