@@ -1,3 +1,3 @@
 return {
-    dir = "~/workspace/dbx.nvim"
+    --    dir = "~/workspace/dbx.nvim"
 }

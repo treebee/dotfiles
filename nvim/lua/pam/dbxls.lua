@@ -18,10 +18,13 @@ local setup = function(opts)
     vim.api.nvim_create_autocmd("FileType", {
         pattern = { "python", "yaml", "yml" },
         callback = function()
+            if vim.bo.filetype == "python" and not is_databricks_notebook(0) then
+                return
+            end
             local client_id = vim.lsp.start({
                 name = "dbx-ls",
                 root_dir = root_dir,
-                cmd = { vim.env.HOME .. "/workspace/dbx-ls/zig-out/bin/dbx-ls" },
+                cmd = { vim.env.HOME .. "/.local/bin/dbx-ls" },
             })
             if client_id == nil then
                 return

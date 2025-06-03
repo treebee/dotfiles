@@ -11,15 +11,10 @@ return {
             "j-hui/fidget.nvim",
         },
         config = function()
-            require("elixir").setup({
-            })
             local servers = {
                 bashls = {},
                 cssls = {},
-                -- elixirls = {
-                --     cmd = { vim.env.HOME .. "/.local/share/nvim/mason/bin/elixir-ls" },
-                -- },
-                -- html = {},
+                html = {},
                 jsonls = {},
                 lua_ls = {
                     settings = {
@@ -36,10 +31,6 @@ return {
                         },
                     },
                 },
-                -- nextls = {
-                --     cmd = { vim.env.HOME .. "/.local/share/nvim/mason/bin/nextls", "--stdio" },
-                -- },
-                pylsp = {},
                 sqlls = {},
                 tailwindcss = {},
                 yamlls = {},
@@ -72,6 +63,7 @@ return {
                     handlers = vim.tbl_deep_extend("force", {}, config.handlers or {}),
                     settings = config.settings,
                     root_dir = config.root_dir,
+                    on_attach = require("pam.lsp").on_attach,
                 })
             end
 
