@@ -2,7 +2,7 @@
 
 pushd /tmp
   rm -rf nvim
-  git clone --depth 1 --branch v0.11.1 https://github.com/neovim/neovim.git
+  git clone --depth 1 --branch v0.11.2 https://github.com/neovim/neovim.git
   pushd neovim
     make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX=$HOME/nvim
     make install
