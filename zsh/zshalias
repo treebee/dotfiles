@@ -43,3 +43,5 @@ alias iex='iex --erl "-kernel shell_history enabled"'
 
 alias t="tmux-sessionizer"
 alias ts="tmux-switch"
+
+alias svpn="nmcli con up id vpn02a-TCP4-443-pam-config --ask"
