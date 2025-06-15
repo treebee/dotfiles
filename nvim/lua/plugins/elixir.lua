@@ -6,7 +6,7 @@ return {
         local elixir = require("elixir")
         local elixirls = require("elixir.elixirls")
         elixir.setup {
-            nextls = { enable = true },
+            nextls = { enable = false },
             elixirls = {
                 enable = true,
                 settings = elixirls.settings {
@@ -16,9 +16,6 @@ return {
                 on_attach = require("pam.lsp").on_attach,
                 tag = "v0.28.0",
             },
-            projectionist = {
-                enable = true
-            }
         }
     end,
     dependencies = {
