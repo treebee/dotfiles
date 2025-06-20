@@ -29,7 +29,6 @@ install-zsh:
 	ln -s `pwd`/zsh/zshalias ~/.zshalias
 
 install-git:
-	rm -rf ~/.gitconfig
 	ln -s `pwd`/gitconfig ~/.gitconfig
 
 install-vim:
