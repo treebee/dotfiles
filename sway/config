@@ -232,10 +232,12 @@ bar {
     swaybar_command waybar
 }
 
-default_border pixel 0
-default_floating_border none
+default_border pixel 5
+default_floating_border pixel 5
 titlebar_padding 1
-titlebar_border_thickness 0
+titlebar_border_thickness 1
+gaps inner 5
+
 
 # start notification daemon
 exec swaync
