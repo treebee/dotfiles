@@ -19,4 +19,11 @@ return {
     "norcalli/nvim-colorizer.lua",
     { "tpope/vim-fugitive" },
     { "mbbill/undotree" },
+    {
+        "vhyrro/luarocks.nvim",
+        priority = 1000,
+        opts = {
+            rocks = { "http", "base64" },
+        },
+    }
 }
