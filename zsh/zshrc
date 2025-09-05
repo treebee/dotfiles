@@ -118,6 +118,8 @@ export VI_MODE_SET_CURSOR=true
 
 [ -s "$HOME/.zshrc.solute-dev" ] && source $HOME/.zshrc.solute-dev
 
+[ -s "$HOME/.zshrc.stuff" ] && source $HOME/.zshrc.stuff
+
 if [[ "$TERM_PROGRAM" != "ghostty" ]]; then
     export TERM=screen-256color
 fi
@@ -134,3 +136,8 @@ export PATH=$installs_dir/elixir/1.18.4-otp-27/bin:$PATH
 
 bindkey -s ^f "tmux-sessionizer\n"
 
+
+# opencode
+export PATH=/home/pam/.opencode/bin:$PATH
+
+alias claude="/home/pam/.claude/local/claude"

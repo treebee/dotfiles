@@ -10,10 +10,10 @@
         "sway/workspaces",
         "sway/mode",
         "sway/scratchpad",
-        "custom/spotify",
+        "custom/spotify"
     ],
     "modules-center": [
-        "clock",
+        "clock"
     ],
     "modules-right": [
         "custom/todos",
@@ -40,7 +40,7 @@
             "3": "",
             "4": "",
             "9": "",
-            "10": "",
+            "10": ""
         }
     },
     "sway/mode": {
@@ -49,7 +49,10 @@
     "sway/scratchpad": {
         "format": "{icon} {count}",
         "show-empty": false,
-        "format-icons": ["", ""],
+        "format-icons": [
+            "",
+            ""
+        ],
         "tooltip": true,
         "tooltip-format": "{app}: {title}"
     },
@@ -57,8 +60,8 @@
         // "icon-size": 21,
         "spacing": 10,
         "icons": {
-           "blueman": "bluetooth",
-        //   "TelegramDesktop": "$HOME/.local/share/icons/hicolor/16x16/apps/telegram.png"
+            "blueman": "bluetooth"
+            //   "TelegramDesktop": "$HOME/.local/share/icons/hicolor/16x16/apps/telegram.png"
         }
     },
     "clock": {
@@ -80,12 +83,26 @@
         "critical-threshold": 80,
         // "format-critical": "{temperatureC}°C {icon}",
         "format": "{temperatureC}°C {icon}",
-        "format-icons": ["", "", ""]
+        "format-icons": [
+            "",
+            "",
+            ""
+        ]
     },
     "backlight": {
         // "device": "acpi_video1",
         "format": "{percent}% {icon}",
-        "format-icons": ["", "", "", "", "", "", "", "", ""]
+        "format-icons": [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ]
     },
     "battery": {
         "states": {
@@ -100,21 +117,27 @@
         "format-alt": "{time} {icon}",
         // "format-good": "", // An empty format will hide the module
         // "format-full": "",
-        "format-icons": ["", "", "", "", ""]
+        "format-icons": [
+            "",
+            "",
+            "",
+            "",
+            ""
+        ]
     },
     "battery#bat2": {
         "bat": "BAT2"
     },
     "power-profiles-daemon": {
-      "format": "{icon}",
-      "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
-      "tooltip": true,
-      "format-icons": {
-        "default": "",
-        "performance": "",
-        "balanced": "",
-        "power-saver": ""
-      }
+        "format": "{icon}",
+        "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+        "tooltip": true,
+        "format-icons": {
+            "default": "",
+            "performance": "",
+            "balanced": "",
+            "power-saver": ""
+        }
     },
     "network": {
         // "interface": "wlp2*", // (Optional) To force the use of this interface
@@ -140,7 +163,11 @@
             "phone": "",
             "portable": "",
             "car": "",
-            "default": ["", "", ""]
+            "default": [
+                "",
+                "",
+                ""
+            ]
         },
         "on-click": "pavucontrol"
     },
@@ -156,8 +183,8 @@
         "on-click": "playerctl -p spotify play-pause",
         "on-click-right": "killall spotify",
         "smooth-scrolling-threshold": 5,
-        "on-scroll-up" : "playerctl -p spotify next",
-        "on-scroll-down" : "playerctl -p spotify previous",
+        "on-scroll-up": "playerctl -p spotify next",
+        "on-scroll-down": "playerctl -p spotify previous",
         "exec": "/usr/bin/python3 $HOME/.config/waybar/modules/mediaplayer.py --player spotify --enable-logging 2> /dev/null",
         "exec-if": "pgrep spotify"
     },
@@ -165,14 +192,14 @@
         "tooltip": false,
         "format": "{icon}",
         "format-icons": {
-          "notification": "<span foreground='red'><sup></sup></span>",
-          "none": "",
-          "dnd-notification": "<span foreground='red'><sup></sup></span>",
-          "dnd-none": "",
-          "inhibited-notification": "<span foreground='red'><sup></sup></span>",
-          "inhibited-none": "",
-          "dnd-inhibited-notification": "<span foreground='red'><sup></sup></span>",
-          "dnd-inhibited-none": ""
+            "notification": "<span foreground='red'><sup></sup></span>",
+            "none": "",
+            "dnd-notification": "<span foreground='red'><sup></sup></span>",
+            "dnd-none": "",
+            "inhibited-notification": "<span foreground='red'><sup></sup></span>",
+            "inhibited-none": "",
+            "dnd-inhibited-notification": "<span foreground='red'><sup></sup></span>",
+            "dnd-inhibited-none": ""
         },
         "return-type": "json",
         "exec-if": "which swaync-client",
@@ -187,6 +214,17 @@
         "return-type": "json",
         "exec": "python3 $HOME/.config/waybar/modules/todos.py",
         "on-click": "python3 $HOME/.config/waybar/modules/todos.py toggle",
-        "on-click-right": "python3 $HOME/.config/waybar/modules/todos.py remove",
+        "on-click-right": "python3 $HOME/.config/waybar/modules/todos.py remove"
+    },
+    "custom/todo": {
+        "exec": "/home/pam/workspace/todo-widget/waybar_integration.py",
+        "return-type": "json",
+        "interval": 30,
+        "on-click": "/home/pam/workspace/todo-widget/waybar_integration.py popup",
+        "on-click-right": "/home/pam/workspace/todo-widget/waybar_integration.py next",
+        "format": "{icon} {}",
+        "format-icons": {
+            "default": "📋"
+        }
     }
- }
+}

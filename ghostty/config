@@ -20,3 +20,7 @@ background-blur = true
 gtk-titlebar = false
 macos-titlebar-style = hidden
 gtk-adwaita = true
+
+
+# keybindings
+keybind = ctrl+shift+n=unbind
