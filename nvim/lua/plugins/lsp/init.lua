@@ -31,12 +31,32 @@ return {
                         },
                     },
                 },
+                pylsp = {
+                    settings = {
+                        pylsp = {
+                            plugins = {
+                                pycodestyle = { enabled = false },
+                                pylint = { enabled = false },
+                                pyflakes = { enabled = false },
+                                mccabe = { enabled = false },
+                                autopep8 = { enabled = false },
+                                yapf = { enabled = false },
+                                flake8 = { enabled = false },
+                                pydocstyle = { enabled = false },
+                            }
+                        }
+                    }
+                },
+                ruff = {
+                    settings = {
+                        format = {
+                            enable = vim.uv.os_gethostname() ~= "notebook-pam",
+                        },
+                    }
+                },
                 sqlls = {},
                 tailwindcss = {},
                 yamlls = {},
-                rust_analyzer = {
-                    check = { command = "clippy", features = "all" },
-                },
                 zls = {},
             }
             local formatters = {}
@@ -54,6 +74,9 @@ return {
             local capabilities = vim.lsp.protocol.make_client_capabilities()
             capabilities = vim.tbl_deep_extend("force", capabilities, require('blink.cmp').get_lsp_capabilities())
 
+            servers["rust_analyzer"] = {
+                check = { command = "clippy", features = "all" },
+            }
             for name, config in pairs(servers) do
                 require("lspconfig")[name].setup({
                     autostart = config.autostart,
