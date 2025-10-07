@@ -11,6 +11,7 @@ return {
             "j-hui/fidget.nvim",
         },
         config = function()
+            local is_work_laptop = vim.uv.os_gethostname() == "notebook-pam"
             local servers = {
                 bashls = {},
                 cssls = {},
@@ -32,13 +33,14 @@ return {
                     },
                 },
                 pylsp = {
+                    autostart = not is_work_laptop,
                     settings = {
                         pylsp = {
                             plugins = {
                                 pycodestyle = { enabled = false },
-                                pylint = { enabled = false },
+                                pylint = { enabled = is_work_laptop },
                                 pyflakes = { enabled = false },
-                                mccabe = { enabled = false },
+                                mccabe = { enabled = is_work_laptop },
                                 autopep8 = { enabled = false },
                                 yapf = { enabled = false },
                                 flake8 = { enabled = false },
@@ -50,7 +52,7 @@ return {
                 ruff = {
                     settings = {
                         format = {
-                            enable = vim.uv.os_gethostname() ~= "notebook-pam",
+                            enable = not is_work_laptop,
                         },
                     }
                 },

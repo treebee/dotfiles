@@ -6,17 +6,22 @@ if [[ "$(uname)" == "Darwin" ]]; then
     exit 0
 fi
 
-# taken from https://github.com/ThePrimeagen/dev/blob/master/runs/ghostty
 sudo apt update
-sudo apt install llvm lld llvm-dev liblld-dev clang libclang-dev libglib2.0-dev libgtk-4-dev libadwaita-1-dev git
+sudo apt install \
+  libgtk-4-dev \
+  libgtk4-layer-shell-dev \
+  libadwaita-1-dev \
+  gettext \
+  libxml2-utils \
+  blueprint-compiler 
 
-wget https://ziglang.org/download/0.14.0/zig-linux-x86_64-0.14.0.tar.xz -O /tmp/zig.tar.xz
+wget https://ziglang.org/download/0.14.1/zig-linux-x86_64-0.14.1.tar.xz -O /tmp/zig.tar.xz
 tar -xvf /tmp/zig.tar.xz -C $HOME/.local
-export PATH="$HOME/.local/zig-linux-x86_64-0.13.0:$PATH"
+export PATH="$HOME/.local/zig-linux-x86_64-0.14.1:$PATH"
 
 mkdir -p $HOME/workspace/github
 export GHOSTTY_DIR=$HOME/workspace/github/ghostty
-export GHOSTTY_TAG=v1.1.3
+export GHOSTTY_TAG=v1.2.0
 
 if [ ! -d "$GHOSTTY_DIR" ]; then
 git clone git@github.com:ghostty-org/ghostty.git $GHOSTTY_DIR

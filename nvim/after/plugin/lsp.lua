@@ -58,6 +58,7 @@ if vim.uv.os_gethostname() == "notebook-pam" then
     })
 
 
+    print("solute lsp")
     vim.lsp.config("pylsp", {
         cmd = { vim.env["HOME"] .. "/.local/share/uv/tools/solute-pyformat/bin/pylsp" },
     })

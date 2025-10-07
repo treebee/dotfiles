@@ -141,3 +141,5 @@ bindkey -s ^f "tmux-sessionizer\n"
 export PATH=/home/pam/.opencode/bin:$PATH
 
 alias claude="/home/pam/.claude/local/claude"
+
+. "$HOME/.atuin/bin/env"
