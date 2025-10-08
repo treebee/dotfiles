@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -xe
 
-ZIG_VERSION=0.14.0
+ZIG_VERSION=0.15.1
 if [[ "$(uname)" == "Darwin" ]]; then
     FILENAME=zig-macos-aarch64-$ZIG_VERSION
 else
-    FILENAME=zig-linux-x86_64-$ZIG_VERSION
+    FILENAME=zig-x86_64-linux-$ZIG_VERSION
 fi
 
 rm -f /tmp/zig.tar.xz
