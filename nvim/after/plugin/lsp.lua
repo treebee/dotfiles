@@ -1,8 +1,7 @@
-local lspconfig = require('lspconfig')
 local dbxls = require("pam.dbxls")
 
 dbxls.setup()
-lspconfig.gleam.setup({})
+vim.lsp.enable('gleam')
 
 vim.api.nvim_create_autocmd("LspAttach", {
     group = vim.api.nvim_create_augroup("PamLspConfig", {}),

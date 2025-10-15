@@ -80,7 +80,7 @@ return {
                 check = { command = "clippy", features = "all" },
             }
             for name, config in pairs(servers) do
-                require("lspconfig")[name].setup({
+                vim.lsp.config(name, {
                     autostart = config.autostart,
                     cmd = config.cmd,
                     capabilities = capabilities,
@@ -88,8 +88,8 @@ return {
                     handlers = vim.tbl_deep_extend("force", {}, config.handlers or {}),
                     settings = config.settings,
                     root_dir = config.root_dir,
-                    on_attach = require("pam.lsp").on_attach,
                 })
+                vim.lsp.enable(name)
             end
 
             require("mason").setup()
