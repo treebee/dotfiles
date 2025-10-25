@@ -1,7 +1,11 @@
 #!/usr/bin/env zsh
 
 tmux_running=$(pgrep tmux)
-fd="/usr/bin/fdfind"
+if [[ -f /usr/bin/fdfind ]]; then
+  fd="/usr/bin/fdfind"
+else
+  fd="/usr/bin/fd"
+fi
 
 if [[ "$(uname)" == "Darwin" ]]; then
     fd="/opt/homebrew/bin/fd"
