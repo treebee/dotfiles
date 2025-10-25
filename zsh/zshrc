@@ -105,8 +105,10 @@ export XDG_CONFIG_HOME=$HOME/.config
 export FLYCTL_INSTALL="/home/patrick/.fly"
 export PATH="$FLYCTL_INSTALL/bin:$PATH"
 
-. "$HOME/.cargo/env"
+[ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+
 eval "$(atuin init zsh)"
+[ -s "$HOME/.atuin/env" ] && . "$HOME/.atuin/env"
 
 [ -s "$HOME/.rye/env" ] && source "$HOME/.rye/env"
 

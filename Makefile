@@ -94,6 +94,7 @@ install-tmux:
 	rm -rf ~/.tmux.conf
 	ln -s `pwd`/tmux/tmux.conf ~/.tmux.conf
 	git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm || bash -c "pushd ~/.tmux/plugins/tpm && git pull && popd"
+	mkdir -p ~/.local/bin
 	rm -rf ~/.local/bin/tmux-sessionizer
 	ln -s `pwd`/tmux/tmux-sessionizer ~/.local/bin/tmux-sessionizer
 	rm -rf ~/.local/bin/tmux-switch
@@ -113,3 +114,7 @@ install-waybar:
 	rm -f ~/bin/todos.py
 	ln -s `pwd`/waybar/modules/todos.py ~/bin/todos.py
 	sudo apt install playerctl libplayerctl2 libplayerctl-dev
+
+install-hypr:
+	rm -rf ~/.config/hypr
+	ln -s `pwd`/hypr ~/.config/hypr
