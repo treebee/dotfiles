@@ -11,7 +11,7 @@ M.on_attach = function(client, bufnr)
 
 	-- Add any other on_attach logic here, like keymaps
 	-- vim.keymap.set("n", "K", vim.lsp.buf.hover, { buffer = bufnr })
-	local opts = { buffer = ev.buf }
+	local opts = { buffer = bufnr }
 	vim.keymap.set("n", "<leader>vd", function()
 		vim.diagnostic.open_float()
 	end, opts)

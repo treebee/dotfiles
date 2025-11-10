@@ -1,42 +1,9 @@
-local dbxls = require("pam.dbxls")
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities = vim.tbl_deep_extend("force", capabilities, require("blink.cmp").get_lsp_capabilities())
 
-dbxls.setup()
-
-vim.api.nvim_create_autocmd("LspAttach", {
-	group = vim.api.nvim_create_augroup("PamLspConfig", {}),
-	callback = function(ev)
-		local opts = { buffer = ev.buf }
-		vim.keymap.set("n", "<leader>vd", function()
-			vim.diagnostic.open_float()
-		end, opts)
-		vim.keymap.set("n", "[d", function()
-			vim.diagnostic.get_next()
-		end, opts)
-		vim.keymap.set("n", "]d", function()
-			vim.diagnostic.get_prev()
-		end, opts)
-		vim.keymap.set("n", "gd", function()
-			vim.lsp.buf.definition()
-		end, opts)
-		vim.keymap.set("n", "K", function()
-			vim.lsp.buf.hover()
-		end, opts)
-		vim.keymap.set("n", "<leader>vws", function()
-			vim.lsp.buf.workspace_symbol()
-		end, opts)
-		vim.keymap.set("n", "<leader>vca", function()
-			vim.lsp.buf.code_action()
-		end, opts)
-		vim.keymap.set("n", "<leader>vrr", function()
-			vim.lsp.buf.references()
-		end, opts)
-		vim.keymap.set("n", "<leader>vrn", function()
-			vim.lsp.buf.rename()
-		end, opts)
-		vim.keymap.set("i", "<leader>vrh", function()
-			vim.lsp.buf.signature_help()
-		end, opts)
-	end,
+vim.lsp.config("*", {
+	on_attach = require("pam.lsp").on_attach,
+	capabilities = capabilities,
 })
 
 vim.diagnostic.config({
@@ -75,7 +42,6 @@ if vim.uv.os_gethostname() == "notebook-pam" then
 		end,
 	})
 
-	print("solute lsp")
 	vim.lsp.config("pylsp", {
 		cmd = { vim.env["HOME"] .. "/.local/share/uv/tools/solute-pyformat/bin/pylsp" },
 	})
@@ -86,3 +52,5 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 		vim.lsp.buf.format()
 	end,
 })
+
+require("fidget").setup()

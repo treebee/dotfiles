@@ -1,16 +1,9 @@
---------------------------------------------------------------------------------
--- Markdown Previewer
---------------------------------------------------------------------------------
-
 return {
 	"iamcco/markdown-preview.nvim",
-	ft = "markdown",
-	build = function()
-		vim.fn["mkdp#util#install"]()
+	cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
+	build = "cd app && yarn install",
+	init = function()
+		vim.g.mkdp_filetypes = { "markdown" }
 	end,
-	cmd = {
-		"MarkdownPreviewToggle",
-		"MarkdownPreview",
-		"MarkdownPreviewStop",
-	},
+	ft = { "markdown" },
 }

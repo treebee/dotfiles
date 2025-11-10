@@ -1,4 +1,4 @@
-theme = TokyoNight
+theme = Catppuccin Mocha
 term = xterm-256color
 
 font-family = "MonaspiceAr Nerd Font Mono"
@@ -17,8 +17,8 @@ font-feature = ss08
 
 background-opacity = 0.9
 background-blur = true
-gtk-titlebar = false
-macos-titlebar-style = hidden
+# gtk-titlebar = false
+# macos-titlebar-style = hidden
 
 
 # keybindings

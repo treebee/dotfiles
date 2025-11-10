@@ -9,13 +9,13 @@ vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
 
 vim.api.nvim_create_autocmd("FileType", {
-    pattern = "html",
-    callback = function()
-        vim.opt.tabstop = 2
-        vim.opt.softtabstop = 2
-        vim.opt.shiftwidth = 2
-        vim.opt.expandtab = true
-    end
+	pattern = "html",
+	callback = function()
+		vim.opt.tabstop = 2
+		vim.opt.softtabstop = 2
+		vim.opt.shiftwidth = 2
+		vim.opt.expandtab = true
+	end,
 })
 
 vim.opt.smartindent = true
@@ -42,6 +42,5 @@ vim.opt.updatetime = 50
 vim.opt.colorcolumn = "80"
 
 vim.api.nvim_set_option_value("clipboard", "unnamedplus", { scope = "global" })
-
 
 vim.opt.laststatus = 3
