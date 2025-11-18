@@ -17,8 +17,6 @@ font-feature = ss08
 
 background-opacity = 0.9
 background-blur = true
-# gtk-titlebar = false
-# macos-titlebar-style = hidden
 
 
 # keybindings

@@ -3,7 +3,7 @@ email = patrick@opentrash.org
 name = Patrick Mühlbauer
 
 [merge]
-tool = meld
+    tool = nvimdiff
 
 [diff]
     colorMoved = default
@@ -38,6 +38,8 @@ untracked = cyan
 
 [push]
 default = simple
+autoSetupRemote = true
+
 [init]
 	defaultBranch = main
 [log]
