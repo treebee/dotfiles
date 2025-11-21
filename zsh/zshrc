@@ -109,7 +109,7 @@ export PATH="$FLYCTL_INSTALL/bin:$PATH"
 
 eval "$(atuin init zsh)"
 [ -s "$HOME/.atuin/env" ] && . "$HOME/.atuin/env"
-[ -s "$HOME/.atuin/bin/env" ] && . "HOME/.atuin/bin/env"
+[ -s "$HOME/.atuin/bin/env" ] && . "$HOME/.atuin/bin/env"
 
 [ -s "$HOME/.rye/env" ] && source "$HOME/.rye/env"
 
