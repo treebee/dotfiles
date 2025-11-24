@@ -1,21 +1,7 @@
 return {
     "mason-org/mason-lspconfig.nvim",
     opts = {
-        ensure_installed = {
-            "lua_ls",
-            "rust_analyzer",
-            "ruff",
-            "zls",
-            "bashls",
-            "cssls",
-            "html",
-            "jsonls",
-            "pylsp",
-            "sqlls",
-            "tailwindcss",
-            "yamlls",
-            "elixirls",
-        },
+        ensure_installed = require("pam.lsp").servers,
     },
     dependencies = {
         { "mason-org/mason.nvim", opts = {} },
