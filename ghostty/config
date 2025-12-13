@@ -21,3 +21,6 @@ background-blur = true
 
 # keybindings
 keybind = ctrl+shift+n=unbind
+
+# Slowdown mouse scrolling
+mouse-scroll-multiplier = 0.95
