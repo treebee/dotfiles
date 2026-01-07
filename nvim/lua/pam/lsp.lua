@@ -17,10 +17,7 @@ M.servers = {
 }
 
 M.on_attach = function(client, bufnr)
-    -- Disable formatting for ruff
-    if client.name == "ruff" and not require("pam.utils").is_work_laptop() then
-        -- Note: We only disable it if we are NOT on the work laptop
-        -- Or, if you want it always disabled, remove the condition.
+    if (client.name == "ruff" and require("pam.utils").is_work_laptop()) or (client.name == "pylsp" and not require("pam.utils").is_work_laptop()) then
         client.server_capabilities.documentFormattingProvider = false
         client.server_capabilities.documentRangeFormattingProvider = false
     end

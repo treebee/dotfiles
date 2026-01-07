@@ -2,6 +2,7 @@ local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = vim.tbl_deep_extend("force", capabilities, require("blink.cmp").get_lsp_capabilities())
 
 local lsp = require("pam.lsp")
+local utils = require("pam.utils")
 
 vim.lsp.config("*", {
     on_attach = lsp.on_attach,
@@ -12,7 +13,7 @@ vim.diagnostic.config({
     virtual_text = true,
 })
 
-if vim.uv.os_gethostname() == "notebook-pam" then
+if utils.is_work_laptop() then
     -- Solute stuff
     -- Only show diagnostics for "our" code,
     vim.api.nvim_create_autocmd("FileType", {
