@@ -143,7 +143,6 @@ bindkey -s ^f "tmux-sessionizer\n"
 # opencode
 export PATH=/home/pam/.opencode/bin:$PATH
 
-alias claude="/home/pam/.claude/local/claude"
 
 # Added by LM Studio CLI (lms)
 export PATH="$PATH:/home/patrick/.lmstudio/bin"
