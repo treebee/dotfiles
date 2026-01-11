@@ -48,6 +48,19 @@ if utils.is_work_laptop() then
     vim.lsp.config("pylsp", {
         cmd = { vim.env["HOME"] .. "/.local/share/uv/tools/solute-pyformat/bin/pylsp" },
     })
+else
+    -- Disable pycodestyle
+    vim.lsp.config("pylsp", {
+        settings = {
+            pylsp = {
+                plugins = {
+                    pycodestyle = {
+                        enabled = false,
+                    },
+                },
+            },
+        },
+    })
 end
 
 vim.api.nvim_create_autocmd("BufWritePre", {
