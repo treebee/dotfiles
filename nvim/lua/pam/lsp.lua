@@ -13,7 +13,6 @@ M.servers = {
     "sqlls",
     "tailwindcss",
     "yamlls",
-    "elixirls",
 }
 
 M.on_attach = function(client, bufnr)
