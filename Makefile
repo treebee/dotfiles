@@ -2,6 +2,9 @@ install: install-zsh install-vim install-git install-xfiles install-tmux \
   		 install-hg install-fontconfig install-dunst install-i3 install-nvim \
 		 install-aerospace install-wezterm
 
+ensure-local-bin:
+	mkdir -p ~/.local/bin
+
 bootstrap-system:
 	bootstrap/system
 
@@ -90,11 +93,10 @@ install-wezterm:
 	ln -s `pwd`/wezterm.lua ~/.wezterm.lua
 	ln -s `pwd`/wezterm ~/.config/wezterm
 
-install-tmux:
+install-tmux: ensure-local-bin
 	rm -rf ~/.tmux.conf
 	ln -s `pwd`/tmux/tmux.conf ~/.tmux.conf
 	git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm || bash -c "pushd ~/.tmux/plugins/tpm && git pull && popd"
-	mkdir -p ~/.local/bin
 	rm -rf ~/.local/bin/tmux-sessionizer
 	ln -s `pwd`/tmux/tmux-sessionizer ~/.local/bin/tmux-sessionizer
 	rm -rf ~/.local/bin/tmux-switch
@@ -118,3 +120,7 @@ install-waybar:
 install-hypr:
 	rm -rf ~/.config/hypr
 	ln -s `pwd`/hypr ~/.config/hypr
+
+install-agent-wrapper: ensure-local-bin
+	rm -f ~/.local/bin/bwrap_agent
+	ln -s `pwd`/bin/bwrap_agent.sh ~/.local/bin/bwrap_agent
