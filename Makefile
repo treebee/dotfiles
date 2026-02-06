@@ -123,4 +123,4 @@ install-hypr:
 
 install-agent-wrapper: ensure-local-bin
 	rm -f ~/.local/bin/bwrap_agent
-	ln -s `pwd`/bin/bwrap_agent.sh ~/.local/bin/bwrap_agent
+	ln -s `pwd`/bin/bwrap_agent.py ~/.local/bin/bwrap_agent
