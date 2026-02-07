@@ -3,3 +3,4 @@
 /nvim/lazy-lock.json
 waybar/modules/media-player.log
 .elixir-tools
+__pycache__
