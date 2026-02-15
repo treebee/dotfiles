@@ -5,40 +5,72 @@
 
 import argparse
 import os
+import shlex
 import shutil
 from pathlib import Path
 
 
 env = os.getenv
 
+
 def expand_path(value: str) -> str:
     return os.path.expanduser(value)
 
 
 ENV_VARS_TO_SHARE = [
-"EDITOR",
-"XDG_RUNTIME_DIR",
-"WAYLAND_DISPLAY",
+    "HOME",
+    "PATH",
+    "EDITOR",
+    "XDG_RUNTIME_DIR",
+    "XDG_CONFIG_HOME",
+    "XCURSOR_SIZE",
+    "XDG_SESSION_TYPE",
+    "TERM",
+    "TERMINFO",
+    "TERM_PROGRAM",
+    "LANG",
+    "LC_NUMERIC",
+    "LC_TIME",
+    "SHELL",
+    "DISPLAY",
+    "COLORTERM",
+    "ASDF_DIR",
+    "BUN_INSTALL",
+    "WAYLAND_DISPLAY",
+    "PIP_REQUIRE_VIRTUALENV",
+    "VIRTUALENVWRAPPER_PYTHON",
+    "VIRTUALENVWRAPPER_SCRIPT",
+    "_VIRTUALENVWRAPPER_API",
+    "VIRTUAL_ENV",
 ]
 
-def _add_bind(flag: str, path: Path) -> None:
+
+def _add_bind(flag: str, path: Path) -> list[str]:
     if path.exists():
         return [flag, str(path), str(path)]
     return []
 
 
-def bind(path: Path) -> None:
+def bind(path: Path) -> list[str]:
     return _add_bind("--bind", path)
 
 
-def ro_bind(path: Path) -> None:
+def ro_bind(path: Path) -> list[str]:
     return _add_bind("--ro-bind", path)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("-b", "--bind", dest="extra_rw_binds", action="append", default=[])
-    parser.add_argument("-rb", "--ro-bind", dest="extra_ro_binds", action="append", default=[])
+    parser.add_argument(
+        "-b", "--bind", dest="extra_rw_binds", action="append", default=[]
+    )
+    parser.add_argument(
+        "-rb", "--ro-bind", dest="extra_ro_binds", action="append", default=[]
+    )
+    parser.add_argument(
+        "-e", "--env", dest="extra_env_vars", action="append", default=[]
+    )
+
     parser.add_argument("agent_cmd_arg", nargs="?")
     parser.add_argument("agent_args", nargs=argparse.REMAINDER)
     parsed, extra_args = parser.parse_known_args()
@@ -59,11 +91,12 @@ def main() -> None:
     home = Path.home()
     xdg_runtime_dir = env("XDG_RUNTIME_DIR", "")
 
-    env_vars = [("--setenv", ev, env(ev, "")) for ev in ENV_VARS_TO_SHARE]
+    env_vars = [
+        ("--setenv", ev, env(ev, ""))
+        for ev in ENV_VARS_TO_SHARE + parsed.extra_env_vars
+    ]
 
-
-    env_agent_cmd = env("AGENT_CMD", "")
-    if env_agent_cmd in {"cursor", "cursor-agent", "agent"}:
+    if agent_cmd_arg in {"cursor", "cursor-agent", "agent"}:
         agent = "cursor"
         optional_binds.extend(bind(Path(home / ".local/share/cursor-agent")))
         optional_binds.extend(bind(Path(home / ".config/Cursor")))
@@ -119,7 +152,9 @@ def main() -> None:
         *ro_bind(Path("/etc/group")),
         *ro_bind(home / ".gitconfig"),
         *ro_bind(home / ".local"),
+        *ro_bind(home / ".virtualenvs"),
         *ro_bind(home / "nvim"),
+        *ro_bind(home / ".bun"),
         *optional_binds,
         *bind(home / ".cache"),
         *bind(Path(cwd)),
@@ -142,12 +177,33 @@ def main() -> None:
     for ev in env_vars:
         bwrap_args += ev
 
+    shell = env("SHELL", "/bin/bash")
+
+    venv_wrapper = env("VIRTUALENVWRAPPER_SCRIPT", "")
+    virtual_env = env("VIRTUAL_ENV", "")
+
+    setup_parts = []
+    if venv_wrapper:
+        setup_parts.append(f"source {shlex.quote(venv_wrapper)}")
+    if virtual_env:
+        setup_parts.append(f"source {shlex.quote(virtual_env)}/bin/activate")
+
+    exec_parts = [shlex.quote(command)]
+    if remaining_args:
+        exec_parts.extend(shlex.quote(arg) for arg in remaining_args)
+
+    if setup_parts:
+        exec_cmd = " && ".join(setup_parts) + " && exec " + " ".join(exec_parts)
+    else:
+        exec_cmd = "exec " + " ".join(exec_parts)
+
     bwrap_args += [
-        command,
-        *remaining_args,
+        "--",
+        shell,
+        "-c",
+        exec_cmd,
     ]
-    print(bwrap_args)
-    environment = {k: v for k, v in os.environ.items() if k in ENV_VARS_TO_SHARE}
+    environment = {k: v for k, v in os.environ.items() if k in env_vars}
     environment.update({"MOZ_ENABLE_WAYLAND": "1"})
 
     os.execvpe("bwrap", bwrap_args, environment)
