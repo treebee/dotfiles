@@ -11,7 +11,6 @@ import argparse
 import os
 import shlex
 import shutil
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -291,9 +290,9 @@ def get_agent_binds(
 
     # Add standard agent paths (home-relative)
     for subpath in [
-        f".config/{agent_name}",
-        f".local/share/{agent_name}",
-        f".{agent_name}",
+        f".config/{config_key}",
+        f".local/share/{config_key}",
+        f".{config_key}",
     ]:
         binds.append(bind(BindConfig(home / subpath, read_only=False)))
 
