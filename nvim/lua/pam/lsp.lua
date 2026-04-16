@@ -20,6 +20,7 @@ M.servers = {
     "html",
     "jsonls",
     "pylsp",
+    "pyrefly",
     "sqlls",
     "tailwindcss",
     "yamlls",
