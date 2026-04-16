@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 """Bubblewrap sandbox wrapper for AI agents.
 
 See also https://patrickmccanna.net/a-detailed-writeup-of-claude-code-constrained-by-bubblewrap/
@@ -53,6 +53,8 @@ DEV_VARS = [
     "VIRTUALENVWRAPPER_SCRIPT",
     "_VIRTUALENVWRAPPER_API",
     "VIRTUAL_ENV",
+    "WORKON_HOME",
+    "SOLUTE_DEV_ROOT",
 ]
 
 ENV_VARS_TO_SHARE = (

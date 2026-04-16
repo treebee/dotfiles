@@ -14,8 +14,8 @@ local langs = {
     "jsx",
     "lua",
     "markdown",
-    "ocaml",
     "php",
+    "puppet",
     "python",
     "ruby",
     "rust",
@@ -29,8 +29,6 @@ local langs = {
     "zig",
     "zsh",
 }
-
-require("nvim-treesitter").install(langs)
 
 vim.api.nvim_create_autocmd("FileType", {
     pattern = langs,

@@ -1,5 +1,15 @@
 local M = {}
 
+--- True when the LSP workspace root contains `.overhauled` (matches ruff's project dir).
+local function project_has_overhauled(client)
+    local root = client.config and client.config.root_dir
+    if not root or root == "" then
+        return false
+    end
+    local marker = vim.fs.joinpath(vim.fs.normalize(root), ".overhauled")
+    return vim.uv.fs_stat(marker) ~= nil
+end
+
 M.servers = {
     "lua_ls",
     "rust_analyzer",
@@ -13,10 +23,12 @@ M.servers = {
     "sqlls",
     "tailwindcss",
     "yamlls",
+    "ts_ls",
 }
 
 M.on_attach = function(client, bufnr)
-    if (client.name == "ruff" and require("pam.utils").is_work_laptop()) or (client.name == "pylsp" and not require("pam.utils").is_work_laptop()) then
+    local utils = require("pam.utils")
+    if (client.name == "ruff" and project_has_overhauled(client)) or (client.name == "pylsp" and not utils.is_work_laptop()) then
         client.server_capabilities.documentFormattingProvider = false
         client.server_capabilities.documentRangeFormattingProvider = false
     end
