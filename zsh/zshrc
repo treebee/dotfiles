@@ -148,3 +148,4 @@ export PATH=/home/pam/.opencode/bin:$PATH
 export PATH="$PATH:/home/patrick/.lmstudio/bin"
 # End of LM Studio CLI section
 
+eval "$(/usr/bin/mise activate zsh)"

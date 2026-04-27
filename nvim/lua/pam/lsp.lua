@@ -11,20 +11,21 @@ local function project_has_overhauled(client)
 end
 
 M.servers = {
-    "lua_ls",
-    "rust_analyzer",
-    "ruff",
-    "zls",
     "bashls",
     "cssls",
+    "expert",
     "html",
     "jsonls",
+    "lua_ls",
     "pylsp",
     "pyrefly",
+    "ruff",
+    "rust_analyzer",
     "sqlls",
     "tailwindcss",
-    "yamlls",
     "ts_ls",
+    "yamlls",
+    "zls",
 }
 
 M.on_attach = function(client, bufnr)

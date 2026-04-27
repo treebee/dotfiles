@@ -294,6 +294,7 @@ def get_agent_binds(
     for subpath in [
         f".config/{config_key}",
         f".local/share/{config_key}",
+        f".local/state/{config_key}",
         f".{config_key}",
     ]:
         binds.append(bind(BindConfig(home / subpath, read_only=False)))
