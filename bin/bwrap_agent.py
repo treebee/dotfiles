@@ -91,6 +91,8 @@ DOTFILE_RO_BINDS = [
 # Dotfile paths relative to home - read-write (for state/cache)
 DOTFILE_RW_BINDS = [
     ".cache",
+    ".mix",
+    ".hex",
 ]
 
 # Agent-specific configurations
