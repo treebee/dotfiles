@@ -142,6 +142,8 @@ bindkey -s ^f "tmux-sessionizer\n"
 
 # opencode
 export PATH=/home/pam/.opencode/bin:$PATH
+# gemini/antigravity
+export PATH="/home/patrick/.local/bin:$PATH"
 
 
 # Added by LM Studio CLI (lms)
@@ -149,3 +151,5 @@ export PATH="$PATH:/home/patrick/.lmstudio/bin"
 # End of LM Studio CLI section
 
 eval "$(/usr/bin/mise activate zsh)"
+
+
