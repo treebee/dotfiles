@@ -73,12 +73,13 @@ SYSTEM_RO_BINDS = [
     Path("/etc/passwd"),
     Path("/etc/group"),
     Path("/etc/alternatives"),
+    Path("/etc/ca-certificates"),
+    Path("/run/systemd"),
 ]
 
 # Dotfile paths relative to home - read-only (for tools/configs)
 DOTFILE_RO_BINDS = [
     ".nvm",
-    ".npm",
     ".npmrc",
     ".asdf",
     ".tool-versions",
@@ -88,11 +89,13 @@ DOTFILE_RO_BINDS = [
     ".agents",
 ]
 
+
 # Dotfile paths relative to home - read-write (for state/cache)
 DOTFILE_RW_BINDS = [
     ".cache",
     ".mix",
     ".hex",
+    ".npm",
 ]
 
 # Agent-specific configurations
@@ -280,6 +283,8 @@ def get_agent_binds(
     # cursor cli is 'agent' or 'cursor-agent'
     if agent_name in {"cursor", "cursor-agent", "agent"}:
         config_key = "cursor"
+    elif agent_name == "agy":
+        config_key = "gemini"
     else:
         config_key = agent_name
 
