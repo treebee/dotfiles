@@ -35,6 +35,10 @@ M.on_attach = function(client, bufnr)
         client.server_capabilities.documentRangeFormattingProvider = false
     end
 
+    if client.name == "pyrefly" then
+        client.server_capabilities.definitionProvider = false
+    end
+
     -- Add any other on_attach logic here, like keymaps
     -- vim.keymap.set("n", "K", vim.lsp.buf.hover, { buffer = bufnr })
     local opts = { buffer = bufnr }

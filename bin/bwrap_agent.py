@@ -251,16 +251,16 @@ def get_dotfile_binds(home: Path) -> list[list[str]]:
     """
     binds = []
 
+    binds.append(bind(BindConfig(home / ".gitconfig", read_only=True)))
+    binds.append(bind(BindConfig(home / ".local", read_only=True)))
+    binds.append(bind(BindConfig(home / ".virtualenvs", read_only=True)))
+    binds.append(bind(BindConfig(home / "nvim", read_only=True)))
+
     for dotfile in DOTFILE_RO_BINDS:
         binds.append(bind(BindConfig(home / dotfile, read_only=True)))
 
     for dotfile in DOTFILE_RW_BINDS:
         binds.append(bind(BindConfig(home / dotfile, read_only=False)))
-
-    binds.append(bind(BindConfig(home / ".gitconfig", read_only=True)))
-    binds.append(bind(BindConfig(home / ".local", read_only=True)))
-    binds.append(bind(BindConfig(home / ".virtualenvs", read_only=True)))
-    binds.append(bind(BindConfig(home / "nvim", read_only=True)))
 
     return binds
 

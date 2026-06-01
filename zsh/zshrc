@@ -52,7 +52,7 @@ plugins=(git rust vi-mode)
 
 # User configuration
 export PATH=$HOME/nvim/bin:$HOME/.mix/escripts:$HOME/bin:$HOME/.local/bin:/usr/local/bin:/opt/android-sdk/tools:$PATH
-export PATH=$HOME/.local/zig:$HOME/.cargo/bin:$HOME/.opencode/bin:$PATH
+export PATH=$HOME/.local/zig:$HOME/.cargo/bin:$HOME/.opencode/bin:$HOME/.atuin/bin:$PATH
 # export MANPATH="/usr/local/man:$MANPATH"
 
 source $ZSH/oh-my-zsh.sh
@@ -108,8 +108,6 @@ export PATH="$FLYCTL_INSTALL/bin:$PATH"
 [ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
 eval "$(atuin init zsh)"
-[ -s "$HOME/.atuin/env" ] && . "$HOME/.atuin/env"
-[ -s "$HOME/.atuin/bin/env" ] && . "$HOME/.atuin/bin/env"
 
 [ -s "$HOME/.rye/env" ] && source "$HOME/.rye/env"
 
@@ -144,12 +142,4 @@ bindkey -s ^f "tmux-sessionizer\n"
 export PATH=/home/pam/.opencode/bin:$PATH
 # gemini/antigravity
 export PATH="/home/patrick/.local/bin:$PATH"
-
-
-# Added by LM Studio CLI (lms)
-export PATH="$PATH:/home/patrick/.lmstudio/bin"
-# End of LM Studio CLI section
-
-eval "$(/usr/bin/mise activate zsh)"
-
 
