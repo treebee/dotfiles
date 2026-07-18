@@ -12,11 +12,12 @@ if [[ "$(uname)" == "Darwin" ]]; then
 fi
 
 if [[ $# -eq 1 ]]; then
-    project_files=$1
+    selected=$1
 else
-    project_files=("$HOME/dotfiles")
+    search_paths=(~ ~/workspace)
+    search_paths+=("/home/$USER/workspace")
     
-    selected=$(for f in $($fd -HI .git$ --min-depth=1 --max-depth=3 --prune ~ ~/workspace); do
+    selected=$(for f in $($fd -HI .git$ --min-depth=1 --max-depth=3 --prune "${search_paths[@]}"); do
         echo $f
     done | uniq | sed -E 's/\.git\/?$//' | sed -e 's/\/$//' | fzf-tmux -p 70%)
     
@@ -28,17 +29,19 @@ fi
 
 selected_name=$(basename "$selected" | tr . _)
 
+echo "Selected: $selected"
+
 if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
     cd $selected
     tmux new-session -s $selected_name -c $selected
-    tmux send-keys -t $selected_name ". ~/dotfiles/tmux/init-session" c-M
+    tmux send-keys -t $selected_name ". /home/$USER/dotfiles/tmux/init-session" c-M
     exit 0
 fi
 
 if ! tmux has-session -t=$selected_name 6> /dev/null; then
     cd $selected
     tmux new-session -ds $selected_name -c $selected
-    tmux send-keys -t $selected_name ". ~/dotfiles/tmux/init-session" c-M
+    tmux send-keys -t $selected_name ". /home/$USER/dotfiles/tmux/init-session" c-M
 fi
 
 if [[ -z $TMUX ]]; then
