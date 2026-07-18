@@ -1,0 +1,76 @@
+# lima/agent.yaml - Native Lima VM Sandbox Configuration
+
+# -----------------------------------------------------------------------------
+# 1. OS Image & Resources Configuration
+# -----------------------------------------------------------------------------
+base: github:lima-vm/lima/templates/archlinux
+
+cpus: 4
+memory: "12GiB"
+disk: "50GiB"
+
+# -----------------------------------------------------------------------------
+# 2. Directory Sharing (Mounts)
+#    Configure your directory shares here.
+#    - 'location' is the path on the host.
+#    - 'writable' controls whether the guest VM can write back to the host.
+#
+#    Note: To add additional mounts without recreating the VM:
+#    1. Stop the VM: `limactl stop agent`
+#    2. Edit the config: `limactl edit agent` and append the new mount to this list.
+#    3. Restart the VM: `limactl start agent`
+# -----------------------------------------------------------------------------
+mounts:
+  - location: "~/workspace"
+    writable: true
+
+  - location: "~/dotfiles"
+    writable: true
+
+  - location: "~/.agents"
+    writable: true
+
+# -----------------------------------------------------------------------------
+# 3. Networking & Service Communication
+#    - Services in Guest: Automatically forwarded to host localhost.
+#    - Services on Host: Accessible from guest via host.lima.internal.
+# -----------------------------------------------------------------------------
+portForwards:
+  # Automatically forward TCP ports in the guest back to the host local interface
+  - guestPortRange: [1, 65535]
+    hostIP: "127.0.0.1"
+
+# -----------------------------------------------------------------------------
+# 4. Graphical Application Support (X11 & Wayland)
+# -----------------------------------------------------------------------------
+ssh:
+  # Enable X11 forwarding natively in SSH connections
+  forwardX11: true
+  forwardX11Trusted: true
+  forwardAgent: true
+
+# Provisioning script run on VM initialization to install X11/Wayland dependencies
+provision:
+  - mode: system
+    script: |
+      # Update package database and upgrade system packages non-interactively
+      pacman -Syu --noconfirm
+
+      pacman -S --noconfirm base-devel git less neovim fd fzf tmux zsh npm inotify-tools
+
+      # Install xauth (required for X11 forwarding)
+      # Install waypipe (required for Wayland application forwarding)
+      # Install demo GUI utilities for verification
+      pacman -S --noconfirm xorg-xauth waypipe mesa xorg-xeyes weston
+
+      # Install development tools
+      pacman -S --noconfirm elixir rustup erlang erlang-ssl
+      rustup toolchain install stable
+
+      # Configure sshd for X11 forwarding:
+      # 1. Ensure X11Forwarding is enabled.
+      # 2. Force IPv4 (inet) for AddressFamily since IPv6 is disabled in the guest kernel,
+      #    preventing X11 socket allocation failures (Failed to allocate internet-domain X11 display socket).
+      sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
+      sed -i 's/#AddressFamily any/AddressFamily inet/' /etc/ssh/sshd_config
+      systemctl restart sshd

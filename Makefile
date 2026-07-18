@@ -27,6 +27,7 @@ bootstrap-homebrew:
 	bootstrap/homebrew
 
 install-zsh:
+	git clone https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh
 	rm -rf ~/.zshrc ~/.zshalias
 	ln -s `pwd`/zsh/zshrc ~/.zshrc
 	ln -s `pwd`/zsh/zshalias ~/.zshalias

@@ -1,0 +1,57 @@
+# lima/agent.yaml - Native Lima VM Sandbox Configuration
+
+# -----------------------------------------------------------------------------
+# 1. OS Image & Resources Configuration
+# -----------------------------------------------------------------------------
+base: github:lima-vm/lima/templates/ubuntu-lts
+
+cpus: 4
+memory: "12GiB"
+disk: "50GiB"
+
+# -----------------------------------------------------------------------------
+# 2. Directory Sharing (Mounts)
+#    Configure your directory shares here.
+#    - 'location' is the path on the host.
+#    - 'writable' controls whether the guest VM can write back to the host.
+# -----------------------------------------------------------------------------
+mounts:
+  # Shared workspace directory (writable for development)
+  - location: "~/workspace"
+    writable: true
+
+  # Shared dotfiles directory (writable)
+  - location: "~/dotfiles"
+    writable: true
+
+# -----------------------------------------------------------------------------
+# 3. Networking & Service Communication
+#    - Services in Guest: Automatically forwarded to host localhost.
+#    - Services on Host: Accessible from guest via host.lima.internal.
+# -----------------------------------------------------------------------------
+portForwards:
+  # Automatically forward TCP ports in the guest back to the host local interface
+  - guestPortRange: [1, 65535]
+    hostIP: "127.0.0.1"
+
+# -----------------------------------------------------------------------------
+# 4. Graphical Application Support (X11 & Wayland)
+# -----------------------------------------------------------------------------
+ssh:
+  # Enable X11 forwarding natively in SSH connections
+  forwardX11: true
+  forwardX11Trusted: true
+  forwardAgent: true
+
+# Provisioning script run on VM initialization to install X11/Wayland dependencies
+provision:
+  - mode: system
+    script: |
+      apt-get update
+      # Install xauth (required for X11 forwarding)
+      # Install waypipe (required for Wayland application forwarding)
+      # Install demo GUI utilities for verification
+      apt-get install -y xauth waypipe x11-apps mesa-utils weston-info
+      apt-get install -y git build-essential tmux zsh cmake fd-find fzf
+
+      cd /home/$USER/dotfiles && ./bootstrap/nvim && make install-tmux install-zsh install-nvim cmake
