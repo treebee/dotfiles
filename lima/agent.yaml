@@ -3,33 +3,36 @@
 # -----------------------------------------------------------------------------
 # 1. OS Image & Resources Configuration
 # -----------------------------------------------------------------------------
-images:
-  # Using Debian 12 (bookworm) for a lightweight, fast, and stable agent environment
-  - location: "https://cloud.debian.org/images/cloud/bookworm/daily/latest/debian-12-genericcloud-amd64.qcow2"
-    arch: "x86_64"
+#
+# images:
+#   - location: "https://cloud-images.ubuntu.com/releases/resolute/release/ubuntu-26.04-server-cloudimg-amd64.img"
+#     arch: "x86_64"
+#     digest: "sha256:b7daa0ffcb06acf44547a2f7682088d13acf0609937507faa8d7ef0302640ddd"
+base: github:lima-vm/lima/templates/archlinux
 
-cpus: 2
-memory: "4GiB"
-disk: "20GiB"
+cpus: 4
+memory: "12GiB"
+disk: "50GiB"
 
 # -----------------------------------------------------------------------------
 # 2. Directory Sharing (Mounts)
 #    Configure your directory shares here.
 #    - 'location' is the path on the host.
 #    - 'writable' controls whether the guest VM can write back to the host.
+#
+#    Note: To add additional mounts without recreating the VM:
+#    1. Stop the VM: `limactl stop agent`
+#    2. Edit the config: `limactl edit agent` and append the new mount to this list.
+#    3. Restart the VM: `limactl start agent`
 # -----------------------------------------------------------------------------
 mounts:
-  # Default mount of home directory as read-only for safety
-  - location: "~"
-    writable: false
+  - location: "~/workspace"
+    writable: true
 
-  # Writable workspace mount (change this to your development directory)
   - location: "~/dotfiles"
     writable: true
 
-  # Temporary directory
-  - location: "/tmp/lima"
-    mountPoint: "/tmp/lima"
+  - location: "~/.agents"
     writable: true
 
 # -----------------------------------------------------------------------------
@@ -55,8 +58,24 @@ ssh:
 provision:
   - mode: system
     script: |
-      apt-get update
+      # Update package database and upgrade system packages non-interactively
+      pacman -Syu --noconfirm
+
+      pacman -S --noconfirm base-devel git less neovim fd fzf tmux zsh npm inotify-tools
+
       # Install xauth (required for X11 forwarding)
       # Install waypipe (required for Wayland application forwarding)
       # Install demo GUI utilities for verification
-      apt-get install -y xauth waypipe x11-apps mesa-utils weston-info
+      pacman -S --noconfirm xorg-xauth waypipe mesa xorg-xeyes weston
+
+      # Install development tools
+      pacman -S --noconfirm elixir rustup erlang erlang-ssl
+      rustup toolchain install stable
+
+      # Configure sshd for X11 forwarding:
+      # 1. Ensure X11Forwarding is enabled.
+      # 2. Force IPv4 (inet) for AddressFamily since IPv6 is disabled in the guest kernel,
+      #    preventing X11 socket allocation failures (Failed to allocate internet-domain X11 display socket).
+      sed -i 's/#X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
+      sed -i 's/#AddressFamily any/AddressFamily inet/' /etc/ssh/sshd_config
+      systemctl restart sshd

@@ -15,24 +15,23 @@ To create and boot the VM instance using this configuration, run the following c
 ```bash
 limactl start lima/agent.yaml
 ```
-During the prompt, select to start with the provided configuration. This will boot a Debian 12 virtual machine and automatically run the provisioning script to install `xauth`, `waypipe`, and GUI utilities inside the guest.
+During the prompt, select to start with the provided configuration. This will boot an Arch Linux virtual machine and automatically run the provisioning script to install `xorg-xauth`, `waypipe`, and GUI utilities inside the guest.
 
 ### 2. File Sharing & Directory Configuration
 The directories shared between host and guest are defined under the `mounts` key in [lima/agent.yaml](file:///home/patrick/dotfiles/lima/agent.yaml):
 
 ```yaml
 mounts:
-  # Home directory as read-only for safety
-  - location: "~"
-    writable: false
-
   # Writable workspace mount
+  - location: "~/workspace"
+    writable: true
+
+  # Writable dotfiles mount
   - location: "~/dotfiles"
     writable: true
 
-  # Temporary writable directory
-  - location: "/tmp/lima"
-    mountPoint: "/tmp/lima"
+  # Writable agents directory mount
+  - location: "~/.agents"
     writable: true
 ```
 
@@ -42,7 +41,7 @@ If you need to change which directories are shared, or modify their read/write s
    ```bash
    limactl edit agent
    ```
-3. Restart the VM to apply changes:
+3. Restart the VM to apply changes (this updates configuration mounts without recreating the VM):
    ```bash
    limactl stop agent && limactl start agent
    ```
@@ -60,17 +59,27 @@ If you need to change which directories are shared, or modify their read/write s
 Both X11 and Wayland GUI applications are supported:
 
 - **X11 Forwarding**:
-  Generate your local SSH configuration file:
+  Connect using standard `ssh` with trusted X11 forwarding (`-Y`) using the SSH configuration file automatically maintained by Lima at `~/.lima/agent/ssh.config`:
   ```bash
-  limactl show-ssh --format=config agent > ~/.lima/agent/ssh.config
+  ssh -Y -F ~/.lima/agent/ssh.config lima-agent
   ```
-  Run GUI commands by passing `-Y` (trusted X11 forwarding) to SSH:
+  *(Note: You must connect via SSH with `-Y` or `-X`; the default `limactl shell` command does not establish the X11 tunnel).*
+
+  Once logged in, verify `$DISPLAY` is set and run your GUI application:
   ```bash
-  ssh -Y -F ~/.lima/agent/ssh.config lima-agent xeyes
+  xeyes
   ```
+
 - **Wayland Forwarding (Waypipe)**:
-  Make sure `waypipe` is installed on the host. Run:
+  If your host uses Wayland, you can forward application windows natively without X11 using `waypipe` (which is installed in the guest). Ensure `waypipe` is also installed on your host system, then connect and run:
   ```bash
-  waypipe ssh -F ~/.lima/agent/ssh.config lima-agent weston-info
+  waypipe ssh -F ~/.lima/agent/ssh.config lima-agent chromium --no-sandbox
   ```
-  This forwards wayland sockets directly to the host compositor, displaying windows seamlessly on your Linux desktop.
+
+- **Arch Linux Native GUI Applications**:
+  You can install and run native GUI applications (like Chromium or Firefox) inside the VM using `pacman`:
+  ```bash
+  sudo pacman -S chromium
+  chromium --no-sandbox
+  ```
+  *(Note: Since these packages are native on Arch Linux rather than Snap packages, they do not require any sandbox/Xauthority path workarounds).*
