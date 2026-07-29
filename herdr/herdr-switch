@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+# herdr port of tmux/tmux-switch: pick a workspace with fzf and focus it
+# (herdr workspaces ≈ tmux sessions).
+
+selected=$(herdr workspace list 2>/dev/null | python3 -c '
+import json, sys
+try:
+    data = json.load(sys.stdin)
+except ValueError:
+    sys.exit(0)
+for w in data["result"]["workspaces"]:
+    print("{}: {}\t{}".format(w["number"], w["label"], w["workspace_id"]))
+' | fzf)
+
+if [[ -z $selected ]]; then
+    exit 0
+fi
+
+ws_id=${selected##*$'\t'}
+
+herdr workspace focus "$ws_id" >/dev/null
+
+if [[ -z $HERDR_ENV && -z $HERDR_SOCKET_PATH && -t 1 ]]; then
+    exec herdr
+fi

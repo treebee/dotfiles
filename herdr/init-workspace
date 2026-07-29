@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# herdr port of tmux/init-session. Sourced into the first pane's shell of a
+# new herdr workspace (sent by herdr-sessionizer via `herdr pane run`).
+
+if [[ "$(pwd)" == "$HOME" ]]; then
+    clear
+    return
+fi
+
+scratch_pane=$(herdr tab create --workspace "$HERDR_WORKSPACE_ID" --label scratch --no-focus | python3 -c 'import json, sys; print(json.load(sys.stdin)["result"]["root_pane"]["pane_id"])')
+
+([ -f pyproject.toml ] || [ -f setup.py ]) && [ ! -f uv.lock ] && wo . && herdr pane run "$scratch_pane" 'wo .' >/dev/null
+
+nvim .
+clear
