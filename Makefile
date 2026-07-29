@@ -1,6 +1,6 @@
 install: install-zsh install-vim install-git install-xfiles install-tmux \
   		 install-hg install-fontconfig install-dunst install-i3 install-nvim \
-		 install-aerospace install-wezterm
+		 install-aerospace install-wezterm install-herdr
 
 ensure-local-bin:
 	mkdir -p ~/.local/bin
@@ -101,6 +101,15 @@ install-tmux: ensure-local-bin
 	ln -s `pwd`/tmux/tmux-sessionizer ~/.local/bin/tmux-sessionizer
 	rm -rf ~/.local/bin/tmux-switch
 	ln -s `pwd`/tmux/tmux-switch ~/.local/bin/tmux-switch
+
+install-herdr: ensure-local-bin
+	mkdir -p ~/.config/herdr
+	rm -rf ~/.config/herdr/config.toml
+	ln -s `pwd`/herdr/config.toml ~/.config/herdr/config.toml
+	rm -rf ~/.local/bin/herdr-sessionizer
+	ln -s `pwd`/herdr/herdr-sessionizer ~/.local/bin/herdr-sessionizer
+	rm -rf ~/.local/bin/herdr-switch
+	ln -s `pwd`/herdr/herdr-switch ~/.local/bin/herdr-switch
 
 install-mac-kblayouts:
 	cp -rf mac/layouts/* ~/Library/Keyboard\ Layouts/.

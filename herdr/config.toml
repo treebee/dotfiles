@@ -1,0 +1,100 @@
+# herdr configuration — replicates tmux/tmux.conf
+# Install: make install-herdr  (symlinks to ~/.config/herdr/config.toml)
+# Docs: https://herdr.dev/docs/configuration/ | reference: /docs/config-reference/
+# Reload in a running server: prefix ctrl+a, then r   (or `herdr server reload-config`)
+
+# Skip first-run onboarding.
+onboarding = false
+
+# tmux: set -g @plugin "janoamaral/tokyo-night-tmux"
+[theme]
+name = "tokyo-night"
+
+[keys]
+# tmux: set -g prefix C-a / unbind C-b
+prefix = "ctrl+a"
+
+# tmux: bind -n C-right next-window / bind -n C-left previous-window
+# (arrays keep herdr's prefix+n/p defaults, like tmux's built-in prefix n/p)
+next_tab = ["prefix+n", "ctrl+right"]
+previous_tab = ["prefix+p", "ctrl+left"]
+
+# tmux: bind -n C-up switch-client -n / bind -n C-down switch-client -p
+# (herdr workspaces ≈ tmux sessions)
+next_workspace = "ctrl+up"
+previous_workspace = "ctrl+down"
+
+# tmux: bind -n C-s switch-client -l
+# herdr has no "last workspace" action; the picker is the closest equivalent.
+workspace_picker = "ctrl+s"
+
+# tmux: bind | split-window -h / bind - split-window -v
+# (herdr "vertical" = side by side, "horizontal" = stacked, like tmux -h/-v)
+split_vertical = "prefix+|"
+split_horizontal = "prefix+minus"
+
+# tmux: bind -r k/j/h/l select-pane -U/-D/-L/-R  (herdr defaults, kept explicit)
+focus_pane_up = "prefix+k"
+focus_pane_down = "prefix+j"
+focus_pane_left = "prefix+h"
+focus_pane_right = "prefix+l"
+
+# tmux: bind K confirm kill-session
+# (confirmation comes from ui.confirm_close; tmux's `bind k confirm kill-window`
+# is intentionally not mapped — in tmux.conf it is shadowed by select-pane -U)
+close_workspace = "prefix+shift+k"
+swap_pane_up = "" # herdr default prefix+shift+k displaced by close_workspace
+
+# tmux: bind r source-file ~/.tmux.conf
+reload_config = "prefix+r"
+resize_mode = "prefix+shift+r" # herdr default prefix+r displaced by reload_config
+
+# tmux: bind -r ^ last-window — no herdr equivalent (no last-tab action);
+# use workspace_picker (ctrl+s) or goto (prefix+g) instead.
+
+# tmux: bind C-a send-prefix — send ctrl+a through to the focused pane
+[[keys.command]]
+key = "prefix+a"
+type = "shell"
+command = "herdr pane send-keys \"$HERDR_ACTIVE_PANE_ID\" ctrl+a"
+description = "send-prefix (ctrl+a to pane)"
+
+# tmux: bind-key -r f run-shell "tmux neww ~/.local/bin/tmux-sessionizer"
+[[keys.command]]
+key = "prefix+f"
+type = "popup"
+command = "$HOME/.local/bin/herdr-sessionizer"
+width = "70%"
+height = "70%"
+description = "project sessionizer"
+
+# tmux: bind-key -r F run-shell "tmux neww ~/.local/bin/tmux-switch"
+[[keys.command]]
+key = "prefix+shift+f"
+type = "popup"
+command = "$HOME/.local/bin/herdr-switch"
+width = "70%"
+height = "70%"
+description = "switch workspace"
+
+[ui]
+# tmux: setw -g automatic-rename on — don't prompt for a name on new tabs
+prompt_new_tab_name = false
+# tmux: bind K confirm kill-session — ask before closing a workspace
+confirm_close = true
+
+# tmux: set -g bell-action any — surface background agent activity
+[ui.toast]
+delivery = "herdr"
+
+# Notes on remaining tmux.conf settings:
+# - mode-keys vi / v begin-selection / y copy:  herdr copy mode (prefix+[) is
+#   vi-style by default; y copies, v selects, mouse drag copies (copy_on_select).
+# - extended-keys on / extkeys terminal feature: built into herdr (kitty
+#   keyboard enhancement flags), no setting needed.
+# - base-index 1: herdr numbers workspaces and tabs from 1 already.
+# - set-titles / status-left / status-right: herdr has no status bar; the
+#   sidebar + agent states replace it.
+# - detach-on-destroy off: herdr default — closing a workspace moves to the
+#   next one, the client stays attached.
+# - vim-tmux-navigator plugin: no herdr equivalent (use prefix+h/j/k/l).

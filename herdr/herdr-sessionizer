@@ -1,0 +1,115 @@
+#!/usr/bin/env zsh
+
+# herdr port of tmux/tmux-sessionizer: pick a project directory with fzf and
+# open it as a herdr workspace (herdr workspaces ≈ tmux sessions).
+
+if [[ -f /usr/bin/fdfind ]]; then
+  fd="/usr/bin/fdfind"
+else
+  fd="/usr/bin/fd"
+fi
+
+if [[ "$(uname)" == "Darwin" ]]; then
+    fd="/opt/homebrew/bin/fd"
+fi
+
+if [[ $# -eq 1 ]]; then
+    selected=$1
+else
+    search_paths=(~ ~/workspace)
+    search_paths+=("/home/$USER/workspace")
+
+    selected=$(for f in $($fd -HI .git$ --min-depth=1 --max-depth=3 --prune "${search_paths[@]}"); do
+        echo $f
+    done | uniq | sed -E 's/\.git\/?$//' | sed -e 's/\/$//' | fzf)
+fi
+
+if [[ -z $selected ]]; then
+    exit 0
+fi
+
+selected_name=$(basename "$selected" | tr . _)
+
+echo "Selected: $selected"
+
+# init-workspace lives next to this script in the dotfiles repo; resolve the
+# real path so the symlink from ~/.local/bin works too.
+script_dir=${0:A:h}
+
+in_herdr() {
+    [[ -n $HERDR_ENV || -n $HERDR_SOCKET_PATH ]]
+}
+
+server_running() {
+    herdr api snapshot >/dev/null 2>&1
+}
+
+ensure_server() {
+    server_running && return 0
+    nohup herdr server >/dev/null 2>&1 &!
+    local i
+    for i in {1..50}; do
+        server_running && return 0
+        sleep 0.1
+    done
+    return 1
+}
+
+# echo the workspace_id of the workspace named $1 (empty if missing)
+find_workspace() {
+    herdr workspace list 2>/dev/null | python3 -c '
+import json, sys
+name = sys.argv[1]
+try:
+    data = json.load(sys.stdin)
+except ValueError:
+    sys.exit(0)
+for w in data["result"]["workspaces"]:
+    if w["label"] == name:
+        print(w["workspace_id"])
+        break
+' "$1"
+}
+
+# create workspace $1 at path $2, run init-workspace in its first pane,
+# echo the new workspace_id
+create_workspace() {
+    local out ids ws_id pane_id
+    out=$(herdr workspace create --cwd "$2" --label "$1") || return 1
+    ids=$(print -r -- "$out" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)["result"]
+print(d["workspace"]["workspace_id"], d["root_pane"]["pane_id"])
+') || return 1
+    ws_id=${ids%% *}
+    pane_id=${ids##* }
+    herdr pane run "$pane_id" ". \"$script_dir/init-workspace\"" >/dev/null
+    print -r -- "$ws_id"
+}
+
+attach() {
+    if [[ -t 1 ]]; then
+        exec herdr
+    else
+        echo "run 'herdr' to attach"
+    fi
+}
+
+if ! in_herdr && ! server_running; then
+    ensure_server || { echo "failed to start herdr server" >&2; exit 1; }
+    ws_id=$(create_workspace "$selected_name" "$selected") || exit 1
+    herdr workspace focus "$ws_id" >/dev/null
+    attach
+    exit 0
+fi
+
+ws_id=$(find_workspace "$selected_name")
+if [[ -z $ws_id ]]; then
+    ws_id=$(create_workspace "$selected_name" "$selected") || exit 1
+fi
+
+herdr workspace focus "$ws_id" >/dev/null
+
+if ! in_herdr; then
+    attach
+fi
