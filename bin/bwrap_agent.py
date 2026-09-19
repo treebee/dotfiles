@@ -96,6 +96,11 @@ DOTFILE_RW_BINDS = [
     ".mix",
     ".hex",
     ".npm",
+    ".cargo",
+    ".rustup",
+    ".config/mise",
+    ".local/share/mise",
+    ".local/state/mise",
 ]
 
 # Agent-specific configurations
@@ -107,6 +112,13 @@ AGENT_CONFIGS = {
             "/opt/cursor-agent",
             "/usr/share/cursor",
         ],
+    },
+    "opencode2": {
+        "rw_paths": [
+            ".local/share/opencode",
+            ".config/opencode",
+            ".local/state/opencode",
+        ]
     },
 }
 
