@@ -25,4 +25,8 @@ keybind = ctrl+shift+n=unbind
 # Slowdown mouse scrolling
 mouse-scroll-multiplier = 0.95
 
-async-backend = auto
+# Fix general slowness on hyprland (https://github.com/ghostty-org/ghostty/discussions/3224)
+async-backend = epoll
+
+# Send Shift+Enter as CSI-u so TUIs can distinguish it from Enter.
+keybind = shift+enter=csi:13;2u

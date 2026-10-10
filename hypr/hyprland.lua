@@ -22,10 +22,6 @@ require("hypr.bindings")
 require("hypr.looknfeel")
 require("hypr.autostart")
 
--- App-specific tweaks in hypr/apps/*.lua (overwrite defaults).
-local paths = require("default.hypr.paths")
-require("default.hypr.require_all").files(paths.config_home .. "/hypr/apps", "hypr.apps")
-
 -- Toggle config flags dynamically.
 require("default.hypr.toggles")
 

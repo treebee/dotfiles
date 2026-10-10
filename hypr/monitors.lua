@@ -2,13 +2,13 @@
 -- List current monitors and supported resolutions with: hyprctl monitors all
 
 local omarchy_gdk_scale = 2
+local omarchy_monitor_scale = "auto"
 
 hl.env("GDK_SCALE", tostring(omarchy_gdk_scale))
+hl.monitor({ output = "", mode = "preferred", position = "auto", scale = omarchy_monitor_scale })
 
--- Fallback for any monitor without a specific rule below.
-hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
+-- Configure a specific monitor.
+-- hl.monitor({ output = "DP-2", mode = "2560x1440@144", position = "0x0", scale = 1 })
 
--- Per-output overrides (migrated from hyprland.conf). These only apply when a
--- monitor with that exact name is connected; the fallback above covers the rest.
-hl.monitor({ output = "eDP-1", mode = "1920x1080@60.03", position = "704x1216", scale = 1.50 })
-hl.monitor({ output = "DP-1", mode = "3440x1440@49.99", position = "1984x128", scale = 1.00 })
+-- Portrait/rotated secondary monitor (transform: 1 = 90°, 3 = 270°).
+-- hl.monitor({ output = "DP-2", mode = "preferred", position = "auto", scale = 1, transform = 1 })
