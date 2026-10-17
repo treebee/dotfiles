@@ -21,8 +21,8 @@ previous_tab = ["prefix+p", "ctrl+left"]
 
 # tmux: bind -n C-up switch-client -n / bind -n C-down switch-client -p
 # (herdr workspaces ≈ tmux sessions)
-next_workspace = "ctrl+up"
-previous_workspace = "ctrl+down"
+next_workspace = "ctrl+down"
+previous_workspace = "ctrl+up"
 
 # tmux: bind -n C-s switch-client -l
 # herdr has no "last workspace" action; the picker is the closest equivalent.
