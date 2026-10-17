@@ -1,188 +1,684 @@
 #!/usr/bin/python3
 """Bubblewrap sandbox wrapper for AI agents.
 
-See also https://patrickmccanna.net/a-detailed-writeup-of-claude-code-constrained-by-bubblewrap/
+This script runs an AI agent in a bubblewrap sandbox. It exposes only the parts of the host
+filesystem that are needed for the agent, its configuration, and the current project. All
+namespaces are unshared and the environment is cleared before the agent is started.
 
-This script creates a sandboxed environment for running AI agent commands using bubblewrap,
-restricting filesystem access while preserving necessary environment variables and paths.
+Use `bwrap_agent.py --help` for usage information.
 """
 
 import argparse
+import logging
 import os
+import pwd
+import re
 import shlex
 import shutil
-from dataclasses import dataclass, field
+import subprocess
+import sys
+from collections.abc import Iterator, Sequence
+from dataclasses import dataclass, replace
 from pathlib import Path
-
-
-# Environment variables grouped by purpose
-DISPLAY_VARS = [
-    "DISPLAY",
-    "WAYLAND_DISPLAY",
-    "MOZ_ENABLE_WAYLAND",
-    "XCURSOR_SIZE",
-    "XDG_SESSION_TYPE",
-]
-
-SHELL_VARS = [
-    "HOME",
-    "PATH",
-    "SHELL",
-    "TERM",
-    "TERMINFO",
-    "TERM_PROGRAM",
-    "EDITOR",
-]
-
-LOCALE_VARS = [
-    "LANG",
-    "LC_NUMERIC",
-    "LC_TIME",
-]
-
-XDG_VARS = [
-    "XDG_RUNTIME_DIR",
-    "XDG_CONFIG_HOME",
-]
-
-DEV_VARS = [
-    "ASDF_DIR",
-    "BUN_INSTALL",
-    "PIP_REQUIRE_VIRTUALENV",
-    "VIRTUALENVWRAPPER_PYTHON",
-    "VIRTUALENVWRAPPER_SCRIPT",
-    "_VIRTUALENVWRAPPER_API",
-    "VIRTUAL_ENV",
-    "WORKON_HOME",
-    "SOLUTE_DEV_ROOT",
-]
-
-ENV_VARS_TO_SHARE = (
-    DISPLAY_VARS + SHELL_VARS + LOCALE_VARS + XDG_VARS + DEV_VARS + ["COLORTERM"]
-)
-
-# System paths that are always mounted read-only
-SYSTEM_RO_BINDS = [
-    Path("/usr"),
-    Path("/lib"),
-    Path("/lib64"),
-    Path("/bin"),
-    Path("/etc/resolv.conf"),
-    Path("/etc/hosts"),
-    Path("/etc/ssl"),
-    Path("/etc/passwd"),
-    Path("/etc/group"),
-    Path("/etc/alternatives"),
-    Path("/etc/ca-certificates"),
-    Path("/run/systemd"),
-]
-
-# Dotfile paths relative to home - read-only (for tools/configs)
-DOTFILE_RO_BINDS = [
-    ".nvm",
-    ".npmrc",
-    ".asdf",
-    ".tool-versions",
-    ".bun",
-    ".config/git",
-    ".config/agents",
-    ".agents",
-]
-
-
-# Dotfile paths relative to home - read-write (for state/cache)
-DOTFILE_RW_BINDS = [
-    ".cache",
-    ".mix",
-    ".hex",
-    ".npm",
-    ".cargo",
-    ".rustup",
-    ".config/mise",
-    ".local/share/mise",
-    ".local/state/mise",
-]
-
-# Agent-specific configurations
-AGENT_CONFIGS = {
-    "cursor": {
-        "rw_paths": [
-            ".local/share/cursor-agent",
-            ".config/Cursor",
-            "/opt/cursor-agent",
-            "/usr/share/cursor",
-        ],
-    },
-    "opencode2": {
-        "rw_paths": [
-            ".local/share/opencode",
-            ".config/opencode",
-            ".local/state/opencode",
-        ]
-    },
-}
 
 env = os.getenv
 
 
-@dataclass
-class BindConfig:
-    """Configuration for a bind mount.
+class SandboxError(Exception):
+    """Raised when the sandbox cannot be set up."""
 
-    Attributes:
-        source: Path to bind mount
-        read_only: Whether the mount should be read-only
-        required: If True, fail if path doesn't exist (reserved for future use)
-    """
 
-    source: Path
-    read_only: bool = True
-    required: bool = False
+def expand_path(value: str | Path, home: Path) -> Path:
+    """Expand ``~``/environment variables and make relative paths relative to home."""
+    path = Path(os.path.expandvars(os.path.expanduser(os.fspath(value))))
+    return path if path.is_absolute() else home / path
 
 
 @dataclass
-class SandboxConfig:
-    """Parsed CLI configuration.
+class BasicBindConfig:
+    """A bubblewrap bind mount."""
 
-    Attributes:
-        agent: Name of the agent command to run
-        agent_args: Additional arguments to pass to the agent
-        extra_rw_binds: Extra paths to bind read-write
-        extra_ro_binds: Extra paths to bind read-only
-        extra_env_vars: Extra environment variables to share
-    """
+    source: str | Path
+    target: str | Path | None = None
+    flag: str | None = None
 
-    agent: str
-    agent_args: list[str] = field(default_factory=list)
-    extra_rw_binds: list[Path] = field(default_factory=list)
-    extra_ro_binds: list[Path] = field(default_factory=list)
-    extra_env_vars: list[str] = field(default_factory=list)
+    def __post_init__(self) -> None:
+        self.source = os.fspath(self.source)
+        self.target = self.source if self.target is None else os.fspath(self.target)
+
+    @property
+    def writable(self) -> bool:
+        return False
+
+    def __iter__(self) -> Iterator[str]:
+        if self.flag is None or not Path(self.source).exists():
+            return
+        yield self.flag
+        yield os.fspath(self.source)
+        yield os.fspath(self.target)
+
+    def covers_path(self, path: Path) -> bool:
+        """Return whether ``path`` is inside this bind's source."""
+        source = Path(self.source)
+        if not source.exists():
+            return False
+        path = path.resolve()
+        source = source.resolve()
+        return path == source or source in path.parents
 
 
-def expand_path(value: str) -> str:
-    """Expand user home directory in path."""
-    return os.path.expanduser(value)
+@dataclass
+class ROBindConfig(BasicBindConfig):
+    """A read-only bind mount."""
+
+    flag: str = "--ro-bind"
 
 
-def bind(config: BindConfig) -> list[str]:
-    if config.source.exists():
-        flag = "--ro-bind" if config.read_only else "--bind"
-        return [flag, str(config.source), str(config.source)]
-    return []
+@dataclass
+class RWBindConfig(BasicBindConfig):
+    """A read-write bind mount."""
+
+    flag: str = "--bind"
+    create: bool = True
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        path = Path(self.source)
+        if self.create and not path.exists():
+            try:
+                path.mkdir(parents=True)
+            except OSError:
+                # A missing optional directory is harmless; __iter__ skips it.
+                pass
+
+    @property
+    def writable(self) -> bool:
+        return True
 
 
-def parse_arguments() -> SandboxConfig:
-    """Parse and validate CLI arguments.
+@dataclass
+class DevBindConfig(BasicBindConfig):
+    """A device bind mount."""
 
-    Returns:
-        SandboxConfig with parsed arguments
+    flag: str = "--dev-bind"
 
-    Raises:
-        SystemExit: If required arguments are missing
-    """
+    @property
+    def writable(self) -> bool:
+        return True
+
+
+@dataclass
+class Tmpfs:
+    """A tmpfs mount."""
+
+    target: str | Path
+
+    def __iter__(self) -> Iterator[str]:
+        yield "--tmpfs"
+        yield os.fspath(self.target)
+
+
+@dataclass
+class Dir:
+    """Create a directory inside the sandbox."""
+
+    target: str | Path
+
+    def __iter__(self) -> Iterator[str]:
+        yield "--dir"
+        yield os.fspath(self.target)
+
+
+Mount = BasicBindConfig | Tmpfs | Dir | tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class AgentProfile:
+    """Filesystem and environment requirements for an agent."""
+
+    name: str
+    command: tuple[str, ...]
+    rw_paths: tuple[str, ...] = ()
+    ro_paths: tuple[str, ...] = ()
+    env: tuple[str, ...] = ()
+    gui: bool = False
+    network: bool = True
+
+
+@dataclass(frozen=True)
+class BwrapFeatures:
+    """Bubblewrap options supported by the installed version."""
+
+    disable_userns: bool
+    new_session: bool
+    cap_drop: bool
+    hostname: bool
+
+
+# Environment variables that are safe and useful to pass into the sandbox. Anything that
+# is not listed here remains hidden because bwrap is invoked with --clearenv.
+ENV_VARS_TO_SHARE = (
+    "ASDF_DIR",
+    "BUN_INSTALL",
+    "COLORTERM",
+    "DISPLAY",
+    "EDITOR",
+    "HOME",
+    "LANG",
+    "LC_ALL",
+    "LC_CTYPE",
+    "LC_NUMERIC",
+    "LC_TIME",
+    "LOGNAME",
+    "MOZ_ENABLE_WAYLAND",
+    "PATH",
+    "PIP_REQUIRE_VIRTUALENV",
+    "SHELL",
+    "TERM",
+    "TERMINFO",
+    "TERM_PROGRAM",
+    "TZ",
+    "USER",
+    "VIRTUAL_ENV",
+    "VISUAL",
+    "WAYLAND_DISPLAY",
+    "WORKON_HOME",
+    "XAUTHORITY",
+    "XCURSOR_SIZE",
+    "XDG_CACHE_HOME",
+    "XDG_CONFIG_HOME",
+    "XDG_CURRENT_DESKTOP",
+    "XDG_DATA_HOME",
+    "XDG_RUNTIME_DIR",
+    "XDG_SESSION_TYPE",
+    "XDG_STATE_HOME",
+)
+
+# Read-only home paths that are commonly needed by development tools.
+HOME_RO_PATHS = (
+    ".agents",
+    ".asdf",
+    ".bun",
+    ".config/agents",
+    ".config/git",
+    ".config/nvim",
+    ".gitconfig",
+    ".local/bin",
+    ".npmrc",
+    ".nvm",
+    ".pip",
+    ".tool-versions",
+    ".vim",
+    ".vimrc",
+    "nvim",
+)
+
+# System paths that are safe to expose read-only.
+SYSTEM_RO_PATHS = (
+    "/usr",
+    "/lib",
+    "/lib64",
+    "/bin",
+    "/etc/alternatives",
+    "/etc/ca-certificates",
+    "/etc/fonts",
+    "/etc/gai.conf",
+    "/etc/group",
+    "/etc/host.conf",
+    "/etc/hosts",
+    "/etc/java-17-openjdk",
+    "/etc/java-21-openjdk",
+    "/etc/ld.so.cache",
+    "/etc/ld.so.conf",
+    "/etc/ld.so.conf.d",
+    "/etc/localtime",
+    "/etc/nsswitch.conf",
+    "/etc/os-release",
+    "/etc/passwd",
+    "/etc/pki",
+    "/etc/protocols",
+    "/etc/resolv.conf",
+    "/etc/services",
+    "/etc/ssh/ssh_config",
+    "/etc/ssh/ssh_config.d",
+    "/etc/ssl",
+    "/etc/xdg",
+)
+
+BROAD_PATHS = (
+    Path("/"),
+    Path("/dev"),
+    Path("/etc"),
+    Path("/home"),
+    Path("/opt"),
+    Path("/proc"),
+    Path("/run"),
+    Path("/sys"),
+    Path("/tmp"),
+    Path("/usr"),
+    Path("/var"),
+)
+
+
+def detect_bwrap_features() -> BwrapFeatures:
+    """Inspect ``bwrap --help`` and report which hardening options are available."""
+    try:
+        result = subprocess.run(
+            ["bwrap", "--help"],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+    except OSError as exc:  # pragma: no cover - validate_environment catches this first
+        raise SandboxError(f"failed to run bwrap: {exc}") from exc
+
+    help_text = result.stdout + result.stderr
+    return BwrapFeatures(
+        disable_userns="--disable-userns" in help_text,
+        new_session="--new-session" in help_text,
+        cap_drop="--cap-drop" in help_text,
+        hostname="--hostname" in help_text,
+    )
+
+
+def builtin_profile(name: str) -> AgentProfile | None:
+    """Return the built-in profile for a known agent, if any."""
+    match name:
+        case "cursor":
+            cursor_ide = Path("/usr/share/cursor/cursor")
+            command = (str(cursor_ide), "--no-sandbox") if cursor_ide.exists() else (
+                "cursor",
+                "--no-sandbox",
+            )
+            return AgentProfile(
+                name="cursor",
+                command=command,
+                rw_paths=(
+                    ".cache/cursor",
+                    ".config/Cursor",
+                    ".config/cursor",
+                    ".cursor",
+                    ".local/share/cursor",
+                    ".local/state/cursor",
+                ),
+                ro_paths=("/opt/cursor-agent", "/usr/share/cursor", ".cursorignore"),
+                gui=True,
+            )
+
+        case "cursor-agent" | "agent":
+            current = Path.home() / ".local/share/cursor-agent/versions/current/cursor-agent"
+            command = (str(current),) if current.exists() else ("cursor-agent",)
+            return AgentProfile(
+                name="cursor-agent",
+                command=command,
+                rw_paths=(
+                    ".cache/cursor-agent",
+                    ".config/cursor-agent",
+                    ".local/share/cursor-agent",
+                    ".local/state/cursor-agent",
+                ),
+                ro_paths=("/opt/cursor-agent",),
+                gui=True,
+            )
+
+        case "opencode":
+            return AgentProfile(
+                name="opencode",
+                command=("opencode",),
+                rw_paths=(
+                    ".cache/opencode",
+                    ".config/opencode",
+                    ".local/share/opencode",
+                    ".local/state/opencode",
+                    ".opencode",
+                ),
+                ro_paths=(".local/share/skills",),
+                gui=False,
+            )
+
+        case "claude":
+            return AgentProfile(
+                name="claude",
+                command=("claude",),
+                rw_paths=(
+                    ".cache/claude",
+                    ".claude",
+                    ".config/claude",
+                    ".local/share/claude",
+                    ".local/state/claude",
+                ),
+                gui=False,
+            )
+
+        case "codex":
+            return AgentProfile(
+                name="codex",
+                command=("codex",),
+                rw_paths=(
+                    ".cache/codex",
+                    ".codex",
+                    ".config/codex",
+                    ".local/share/codex",
+                    ".local/state/codex",
+                ),
+                gui=False,
+            )
+
+        case "gemini" | "agy":
+            return AgentProfile(
+                name=name,
+                command=(name,),
+                rw_paths=(
+                    ".cache/gemini",
+                    ".config/gemini",
+                    ".gemini",
+                    ".local/share/gemini",
+                    ".local/state/gemini",
+                ),
+                gui=False,
+            )
+
+    return None
+
+
+def generic_profile(name: str) -> AgentProfile:
+    """Return a conservative profile for an unknown agent."""
+    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", name):
+        rw_paths = (
+            f".cache/{name}",
+            f".config/{name}",
+            f".{name}",
+            f".local/share/{name}",
+            f".local/state/{name}",
+        )
+    else:
+        rw_paths = ()
+
+    return AgentProfile(name=name, command=(name,), rw_paths=rw_paths)
+
+
+def get_agent_profile(agent: str, shell: bool = False) -> AgentProfile:
+    """Resolve an agent name to a profile."""
+    if shell:
+        shell_path = env("SHELL") or pwd.getpwuid(os.getuid()).pw_shell
+        return AgentProfile(name="shell", command=(shell_path,))
+
+    name = Path(agent).name
+    profile = builtin_profile(name) or generic_profile(name)
+
+    if profile.command == (name,) and agent != name:
+        profile = replace(profile, command=(agent,))
+
+    return profile
+
+
+def resolve_command(profile: AgentProfile, args: Sequence[str]) -> list[str]:
+    """Resolve the agent executable and append its arguments."""
+    command = list(profile.command)
+    executable = command[0]
+
+    if os.sep in executable or executable.startswith("."):
+        path = Path(executable).expanduser()
+        if not path.exists() or not os.access(path, os.X_OK):
+            raise SandboxError(f"agent command is not executable: {executable}")
+        command[0] = str(path)
+    else:
+        resolved = shutil.which(executable)
+        if resolved is None:
+            raise SandboxError(f"agent command not found: {executable}")
+        command[0] = resolved
+
+    return [*command, *args]
+
+
+def is_broad_path(path: Path, home: Path) -> bool:
+    """Return whether binding ``path`` read-write would expose too much of the host."""
+    resolved = path.resolve()
+    return resolved == home.resolve() or resolved in BROAD_PATHS
+
+
+def get_default_binds(
+    profile: AgentProfile,
+    home: Path,
+    runtime_dir: Path,
+    *,
+    docker: bool,
+) -> list[Mount]:
+    """Build the baseline filesystem view for the sandbox."""
+    binds: list[Mount] = [
+        ("--dev", "/dev"),
+        ("--proc", "/proc"),
+        Tmpfs("/dev/shm"),
+        Tmpfs("/run"),
+        Tmpfs("/tmp"),
+        ROBindConfig("/sys/dev/char"),
+        ROBindConfig("/sys/devices"),
+        ROBindConfig("/sys/class"),
+        DevBindConfig("/dev/dri"),
+        DevBindConfig("/dev/snd"),
+        Dir(runtime_dir),
+    ]
+
+    for path in SYSTEM_RO_PATHS:
+        binds.append(ROBindConfig(path))
+
+    binds.append(
+        ROBindConfig("/usr/libexec/flatpak-xdg-utils/xdg-open", "/usr/bin/xdg-open"),
+    )
+    binds.append(ROBindConfig("/run/systemd/resolve"))
+    binds.append(ROBindConfig("/tmp/.X11-unix") if env("DISPLAY") else ())
+
+    if wayland_display := env("WAYLAND_DISPLAY"):
+        wayland_path = Path(wayland_display)
+        if not wayland_path.is_absolute():
+            wayland_path = runtime_dir / wayland_path
+        binds.append(ROBindConfig(wayland_path))
+
+    if xauthority := env("XAUTHORITY"):
+        binds.append(ROBindConfig(xauthority))
+    if env("DISPLAY"):
+        binds.append(ROBindConfig(home / ".Xauthority"))
+
+    if docker:
+        docker_host = env("DOCKER_HOST")
+        if docker_host:
+            docker_path = Path(docker_host.removeprefix("unix://"))
+            if docker_path.is_absolute():
+                binds.append(ROBindConfig(docker_path))
+        else:
+            binds.append(ROBindConfig("/var/run/docker.sock"))
+
+    for relative in HOME_RO_PATHS:
+        binds.append(ROBindConfig(home / relative))
+
+    # Keep the SSH directory synthetic and expose only non-secret configuration.
+    binds.append(Dir(home / ".ssh"))
+    binds.append(ROBindConfig(home / ".ssh/config"))
+    binds.append(ROBindConfig(home / ".ssh/known_hosts"))
+    binds.append(ROBindConfig("/etc/ssh/ssh_config"))
+
+    if virtual_env := env("VIRTUAL_ENV"):
+        binds.append(ROBindConfig(virtual_env))
+
+    binds.append(RWBindConfig(home / ".cache" / profile.name, create=True))
+    binds.append(RWBindConfig(home / ".npm", create=True))
+
+    if workon_home := env("WORKON_HOME"):
+        binds.append(RWBindConfig(expand_path(workon_home, home), create=True))
+    elif (home / ".virtualenvs").exists():
+        binds.append(RWBindConfig(home / ".virtualenvs", create=False))
+
+    for value in profile.ro_paths:
+        binds.append(ROBindConfig(expand_path(value, home)))
+
+    for value in profile.rw_paths:
+        binds.append(RWBindConfig(expand_path(value, home), create=True))
+
+    return binds
+
+
+def get_extra_binds(
+    options: argparse.Namespace,
+    home: Path,
+) -> list[Mount]:
+    """Build bind mounts requested on the command line."""
+    binds: list[Mount] = []
+
+    for value in options.extra_rw_binds:
+        path = expand_path(value, home)
+        if not path.exists():
+            raise SandboxError(f"bind source does not exist: {path}")
+        binds.append(RWBindConfig(path, create=False))
+
+    for value in options.extra_ro_binds:
+        path = expand_path(value, home)
+        if not path.exists():
+            raise SandboxError(f"bind source does not exist: {path}")
+        binds.append(ROBindConfig(path))
+
+    return binds
+
+
+def add_cwd_bind(binds: list[Mount], home: Path) -> None:
+    """Make the current directory writable inside the sandbox."""
+    cwd = Path.cwd()
+
+    if is_broad_path(cwd, home):
+        raise SandboxError(f"refusing to bind {cwd} read-write; run from a project directory")
+
+    for bind in binds:
+        if (
+            isinstance(bind, BasicBindConfig)
+            and bind.writable
+            and bind.covers_path(cwd)
+        ):
+            return
+
+    binds.append(RWBindConfig(cwd, create=False))
+
+
+def dedupe_binds(binds: Sequence[Mount]) -> list[Mount]:
+    """Remove duplicate mount arguments while preserving order."""
+    result: list[Mount] = []
+    seen: set[tuple[str, ...]] = set()
+
+    for bind in binds:
+        key = tuple(bind)
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        result.append(bind)
+
+    return result
+
+
+def get_bind_args(binds: Sequence[Mount]) -> list[str]:
+    """Flatten bind configurations into bwrap arguments."""
+    result: list[str] = []
+    for bind in binds:
+        result.extend(bind)
+    return result
+
+
+def get_env_args(
+    profile: AgentProfile,
+    options: argparse.Namespace,
+    home: Path,
+    runtime_dir: Path,
+    cwd: Path,
+) -> list[str]:
+    """Build the explicit environment for the sandbox."""
+    values = {
+        name: value
+        for name in ENV_VARS_TO_SHARE
+        if (value := env(name)) is not None
+    }
+
+    for name in profile.env:
+        if (value := env(name)) is not None:
+            values[name] = value
+
+    if options.docker and (docker_host := env("DOCKER_HOST")):
+        values["DOCKER_HOST"] = docker_host
+
+    values["BWRAP_AGENT_SANDBOX"] = "1"
+    values["HOME"] = values.get("HOME", str(home))
+    values["PATH"] = values.get("PATH", "/usr/local/bin:/usr/bin:/bin")
+    values["PWD"] = str(cwd)
+    values["SHELL"] = values.get("SHELL", pwd.getpwuid(os.getuid()).pw_shell)
+    values["USER"] = values.get("USER", pwd.getpwuid(os.getuid()).pw_name)
+    values["LOGNAME"] = values.get("LOGNAME", values["USER"])
+    values["XDG_RUNTIME_DIR"] = values.get("XDG_RUNTIME_DIR", str(runtime_dir))
+    values.setdefault("MOZ_ENABLE_WAYLAND", "1")
+
+    if virtual_env := values.get("VIRTUAL_ENV"):
+        venv_bin = str(Path(virtual_env) / "bin")
+        path_parts = values["PATH"].split(":")
+        if venv_bin not in path_parts:
+            values["PATH"] = ":".join([venv_bin, *path_parts])
+
+    result: list[str] = []
+    for name, value in values.items():
+        result.extend(("--setenv", name, value))
+
+    for item in options.extra_env_vars:
+        if "=" in item:
+            name, value = item.split("=", 1)
+        else:
+            name = item
+            value = env(name)
+            if value is None:
+                raise SandboxError(f"environment variable is not set: {name}")
+        result.extend(("--setenv", name, value))
+
+    return result
+
+
+def build_bwrap_args(
+    binds: Sequence[Mount],
+    command: Sequence[str],
+    options: argparse.Namespace,
+    profile: AgentProfile,
+    features: BwrapFeatures,
+    env_args: Sequence[str],
+    cwd: Path,
+) -> list[str]:
+    """Assemble the complete bwrap command line."""
+    args = ["bwrap", "--unshare-all"]
+
+    if profile.network and not options.no_network:
+        args.append("--share-net")
+
+    if not options.allow_userns and features.disable_userns:
+        args.extend(("--unshare-user", "--disable-userns"))
+
+    if features.cap_drop:
+        args.extend(("--cap-drop", "ALL"))
+
+    if features.new_session and not options.no_new_session:
+        args.append("--new-session")
+
+    if features.hostname:
+        args.extend(("--hostname", "bwrap-agent"))
+
+    args.extend(("--clearenv", "--die-with-parent", "--chdir", str(cwd)))
+    args.extend(get_bind_args(binds))
+    args.extend(env_args)
+    args.extend(("--", *command))
+    return args
+
+
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Sandbox AI agents using bubblewrap",
         formatter_class=argparse.RawDescriptionHelpFormatter,
+        allow_abbrev=False,
+    )
+    parser.add_argument("--debug", action="store_true", help="enable debug logging")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="print the bwrap command instead of executing it",
     )
     parser.add_argument(
         "-b",
@@ -190,7 +686,8 @@ def parse_arguments() -> SandboxConfig:
         dest="extra_rw_binds",
         action="append",
         default=[],
-        help="Extra paths to bind read-write (can be specified multiple times)",
+        metavar="PATH",
+        help="bind PATH read-write (may be repeated)",
     )
     parser.add_argument(
         "-rb",
@@ -198,7 +695,8 @@ def parse_arguments() -> SandboxConfig:
         dest="extra_ro_binds",
         action="append",
         default=[],
-        help="Extra paths to bind read-only (can be specified multiple times)",
+        metavar="PATH",
+        help="bind PATH read-only (may be repeated)",
     )
     parser.add_argument(
         "-e",
@@ -206,288 +704,117 @@ def parse_arguments() -> SandboxConfig:
         dest="extra_env_vars",
         action="append",
         default=[],
-        help="Extra environment variables to share (can be specified multiple times)",
+        metavar="NAME[=VALUE]",
+        help="pass an environment variable into the sandbox (may be repeated)",
+    )
+    parser.add_argument(
+        "--no-network",
+        action="store_true",
+        help="run without network access",
+    )
+    parser.add_argument(
+        "--allow-userns",
+        action="store_true",
+        help="allow the sandboxed process to create nested user namespaces",
+    )
+    parser.add_argument(
+        "--no-new-session",
+        action="store_true",
+        help="do not detach the sandbox from the controlling terminal",
+    )
+    parser.add_argument(
+        "--docker",
+        action="store_true",
+        help="expose the Docker socket to the sandbox",
+    )
+    parser.add_argument(
+        "--shell",
+        action="store_true",
+        help="run a shell inside the sandbox instead of an agent",
     )
     parser.add_argument(
         "agent",
-        help="Agent command to run (e.g., cursor, claude, custom-agent)",
+        nargs="?",
+        help="agent command to run (for example: cursor-agent, opencode, claude)",
     )
     parser.add_argument(
         "agent_args",
-        nargs="*",
-        help="Additional arguments to pass to the agent",
+        nargs=argparse.REMAINDER,
+        help="arguments forwarded to the agent",
     )
-
-    parsed = parser.parse_args()
-
-    # Expand paths in extra binds
-    extra_rw = [Path(expand_path(p)) for p in parsed.extra_rw_binds if p]
-    extra_ro = [Path(expand_path(p)) for p in parsed.extra_ro_binds if p]
-
-    return SandboxConfig(
-        agent=parsed.agent,
-        agent_args=parsed.agent_args or [],
-        extra_rw_binds=extra_rw,
-        extra_ro_binds=extra_ro,
-        extra_env_vars=parsed.extra_env_vars or [],
-    )
+    return parser
 
 
 def validate_environment() -> None:
-    if not shutil.which("bwrap"):
-        raise SystemExit(
-            "Error: bubblewrap (bwrap) not found in PATH. Please install bubblewrap."
-        )
+    if shutil.which("bwrap") is None:
+        raise SandboxError("bubblewrap (bwrap) was not found in PATH")
 
 
-def get_system_binds() -> list[list[str]]:
-    """Generate bind arguments for system paths.
-
-    Returns:
-        list of bind argument lists for system paths
-    """
-    binds = []
-    for path in SYSTEM_RO_BINDS:
-        binds.append(bind(BindConfig(path, read_only=True)))
-    return binds
-
-
-def get_dotfile_binds(home: Path) -> list[list[str]]:
-    """Generate bind arguments for dotfile paths.
-
-    Args:
-        home: Path to home directory
-
-    Returns:
-        list of bind argument lists for dotfile paths
-    """
-    binds = []
-
-    binds.append(bind(BindConfig(home / ".gitconfig", read_only=True)))
-    binds.append(bind(BindConfig(home / ".local", read_only=True)))
-    binds.append(bind(BindConfig(home / ".virtualenvs", read_only=True)))
-    binds.append(bind(BindConfig(home / "nvim", read_only=True)))
-
-    for dotfile in DOTFILE_RO_BINDS:
-        binds.append(bind(BindConfig(home / dotfile, read_only=True)))
-
-    for dotfile in DOTFILE_RW_BINDS:
-        binds.append(bind(BindConfig(home / dotfile, read_only=False)))
-
-    return binds
-
-
-def get_agent_binds(
-    agent_name: str, home: Path, xdg_runtime_dir: str | None
-) -> list[list[str]]:
-    """Generate bind arguments for agent-specific paths.
-
-    Args:
-        agent_name: Name of the agent
-        home: Path to home directory
-        xdg_runtime_dir: XDG runtime directory path (if set)
-
-    Returns:
-        list of bind argument lists for agent paths
-    """
-    binds = []
-
-    # cursor cli is 'agent' or 'cursor-agent'
-    if agent_name in {"cursor", "cursor-agent", "agent"}:
-        config_key = "cursor"
-    elif agent_name == "agy":
-        config_key = "gemini"
-    else:
-        config_key = agent_name
-
-    agent_config = AGENT_CONFIGS.get(config_key, {})
-    for path_str in agent_config.get("rw_paths", []):
-        path = Path(path_str) if path_str.startswith("/") else home / path_str
-        binds.append(bind(BindConfig(path, read_only=False)))
-
-    # Add XDG runtime dir if available (needed for some GUI agents)
-    if xdg_runtime_dir:
-        binds.append(bind(BindConfig(Path(xdg_runtime_dir), read_only=False)))
-
-    # Add standard agent paths (home-relative)
-    for subpath in [
-        f".config/{config_key}",
-        f".local/share/{config_key}",
-        f".local/state/{config_key}",
-        f".{config_key}",
-    ]:
-        binds.append(bind(BindConfig(home / subpath, read_only=False)))
-
-    return binds
-
-
-def get_extra_binds(paths: list[Path], read_only: bool) -> list[list[str]]:
-    """Generate bind arguments for extra user-specified paths.
-
-    Args:
-        paths: list of paths to bind
-        read_only: Whether to bind read-only
-
-    Returns:
-        list of bind argument lists
-    """
-    binds = []
-    for path in paths:
-        binds.append(bind(BindConfig(path, read_only=read_only)))
-    return binds
-
-
-def environment_args(env_vars: dict[str, str]) -> list[str]:
-    """Generate --setenv arguments for bwrap.
-
-    Args:
-        env_vars: Environment dictionary
-
-    Returns:
-        Flattened list of --setenv arguments
-    """
-    args = []
-
-    for var_name, value in env_vars.items():
-        if value:
-            args.extend(["--setenv", var_name, value])
-
-    # Always set MOZ_ENABLE_WAYLAND if not already set
-    if not env("MOZ_ENABLE_WAYLAND"):
-        args.extend(["--setenv", "MOZ_ENABLE_WAYLAND", "1"])
-
-    return args
-
-
-def build_shell_command(agent_cmd: str, agent_args: list[str]) -> str:
-    """Build the shell command to execute inside the sandbox.
-
-    Conditionally adds virtual environment activation if relevant env vars exist.
-
-    Args:
-        agent_cmd: Path to agent command
-        agent_args: Additional arguments for the agent
-
-    Returns:
-        Shell command string
-    """
-    setup_parts = []
-
-    venv_wrapper = env("VIRTUALENVWRAPPER_SCRIPT")
-    if venv_wrapper:
-        setup_parts.append(f"source {shlex.quote(venv_wrapper)}")
-
-    virtual_env = env("VIRTUAL_ENV")
-    if virtual_env:
-        setup_parts.append(f"source {shlex.quote(virtual_env)}/bin/activate")
-
-    exec_parts = [shlex.quote(agent_cmd)]
-    exec_parts.extend(shlex.quote(arg) for arg in agent_args)
-    exec_cmd = "exec " + " ".join(exec_parts)
-
-    if setup_parts:
-        return " && ".join(setup_parts) + " && " + exec_cmd
-    else:
-        return exec_cmd
-
-
-def build_environment_dict(extra_vars: list[str]) -> dict:
-    """Build environment dictionary for execvpe.
-
-    Args:
-        extra_vars: Additional environment variables to include
-
-    Returns:
-        Dictionary of environment variables
-    """
-    all_vars = ENV_VARS_TO_SHARE + extra_vars
-    env_dict = {}
-
-    for var_name in all_vars:
-        value = env(var_name)
-        if value is not None:
-            env_dict[var_name] = value
-
-    # Always include MOZ_ENABLE_WAYLAND
-    env_dict["MOZ_ENABLE_WAYLAND"] = "1"
-
-    return env_dict
-
-
-def execute_bwrap(bwrap_args: list[str], env: dict) -> None:
-    """Execute bwrap with the given arguments.
-
-    Args:
-        bwrap_args: Complete list of arguments for bwrap
-        env: Environment dictionary
-
-    Raises:
-        SystemExit: If exec fails
-    """
-    try:
-        os.execvpe("bwrap", bwrap_args, env)
-    except OSError as e:
-        raise SystemExit(f"Failed to execute bwrap: {e}")
-
-
-def main() -> None:
-    config = parse_arguments()
-
+def run(options: argparse.Namespace) -> int:
     validate_environment()
+    features = detect_bwrap_features()
 
     home = Path.home()
     cwd = Path.cwd()
-    xdg_runtime_dir = env("XDG_RUNTIME_DIR") or None
+    runtime_dir = Path(env("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}")
 
-    bind_args = []
+    agent = options.agent
+    if options.shell:
+        agent_args = ([agent] if agent else []) + list(options.agent_args)
+        profile = get_agent_profile("", shell=True)
+        command = resolve_command(profile, agent_args)
+    else:
+        if not agent:
+            raise SandboxError("an agent command is required (or use --shell)")
+        profile = get_agent_profile(agent)
+        command = resolve_command(profile, options.agent_args)
 
-    for bind_list in get_system_binds():
-        bind_args.extend(bind_list)
+    binds = get_default_binds(
+        profile,
+        home,
+        runtime_dir,
+        docker=options.docker,
+    )
+    binds.extend(get_extra_binds(options, home))
+    add_cwd_bind(binds, home)
+    binds = dedupe_binds(binds)
 
-    for bind_list in get_dotfile_binds(home):
-        bind_args.extend(bind_list)
+    env_args = get_env_args(profile, options, home, runtime_dir, cwd)
+    bwrap_args = build_bwrap_args(
+        binds,
+        command,
+        options,
+        profile,
+        features,
+        env_args,
+        cwd,
+    )
 
-    for bind_list in get_agent_binds(config.agent, home, xdg_runtime_dir):
-        bind_args.extend(bind_list)
+    if options.debug:
+        logging.debug("Running:\n  %s", shlex.join(bwrap_args))
 
-    for bind_list in get_extra_binds(config.extra_rw_binds, read_only=False):
-        bind_args.extend(bind_list)
-    for bind_list in get_extra_binds(config.extra_ro_binds, read_only=True):
-        bind_args.extend(bind_list)
+    if options.dry_run:
+        print(shlex.join(bwrap_args))
+        return 0
 
-    bind_args.extend(bind(BindConfig(cwd, read_only=False)))
+    try:
+        return subprocess.run(bwrap_args, check=False).returncode
+    except OSError as exc:
+        raise SandboxError(f"failed to execute bwrap: {exc}") from exc
 
-    env_dict = build_environment_dict(config.extra_env_vars)
-    env_args = environment_args(env_dict)
 
-    command = shutil.which(config.agent) or config.agent
-    exec_cmd = build_shell_command(command, config.agent_args)
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = build_parser()
+    options = parser.parse_args(argv)
 
-    shell = env("SHELL", "/bin/bash")
+    logging.basicConfig(level="DEBUG" if options.debug else "WARNING")
 
-    bwrap_args = [
-        "bwrap",
-        *bind_args,
-        "--tmpfs",
-        "/tmp",
-        "--proc",
-        "/proc",
-        "--dev",
-        "/dev",
-        "--share-net",
-        "--unshare-pid",
-        "--die-with-parent",
-        "--chdir",
-        str(cwd),
-        *env_args,
-        "--",
-        shell,
-        "-c",
-        exec_cmd,
-    ]
-
-    execute_bwrap(bwrap_args, env_dict)
+    try:
+        return run(options)
+    except SandboxError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
