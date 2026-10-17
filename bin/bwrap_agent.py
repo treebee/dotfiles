@@ -1,11 +1,87 @@
 #!/usr/bin/python3
 """Bubblewrap sandbox wrapper for AI agents.
 
-This script runs an AI agent in a bubblewrap sandbox. It exposes only the parts of the host
-filesystem that are needed for the agent, its configuration, and the current project. All
-namespaces are unshared and the environment is cleared before the agent is started.
+Run an agent in a bubblewrap sandbox with a minimal view of the host. All
+namespaces are unshared, the environment is cleared, and only explicitly
+selected files and sockets are exposed.
 
-Use `bwrap_agent.py --help` for usage information.
+Usage::
+
+    bwrap_agent AGENT [ARGS...]
+    bwrap_agent --shell [ARGS...]
+
+Examples::
+
+    bwrap_agent cursor-agent --resume
+    bwrap_agent opencode run "explain this repository"
+    bwrap_agent --shell -c 'git status'
+
+The current directory must be covered by a writable bind. If it is not, the
+script offers to whitelist it for one run or permanently. Non-interactive
+runs fail with guidance instead of silently granting access.
+
+Configuration
+=============
+
+Additional configuration is read from ``~/.config/bwrap-agent.toml`` (or
+``$XDG_CONFIG_HOME/bwrap-agent.toml``). Supported sections:
+
+``[[binds]]``
+    Extra bind mounts. ``source`` is mandatory. ``target`` is optional and
+    defaults to the host path. ``read_only`` defaults to true::
+
+        [[binds]]
+        source = "/srv/data"
+        target = "/data"
+        read_only = true
+
+``[[envvars]]``
+    Extra environment variables. ``name`` is mandatory. ``value`` is optional
+    and falls back to the current environment::
+
+        [[envvars]]
+        name = "MY_TOKEN"
+
+``[[whiteouts]]``
+    Paths to hide with an empty tmpfs mount. The path must already be visible
+    inside the sandbox::
+
+        [[whiteouts]]
+        target = "~/.config/agent/secret"
+
+``[agents.<name>]``
+    Per-agent overrides for the built-in profiles. Paths are relative to the
+    home directory unless absolute::
+
+        [agents.opencode]
+        gui = true
+        rw_paths = [".config/opencode"]
+        ro_paths = [".local/share/skills"]
+        env = ["COLORTERM"]
+        network = true
+        command = ["opencode"]
+
+Security model
+==============
+
+The sandbox uses ``--unshare-all``, ``--clearenv``, ``--cap-drop ALL``,
+``--disable-userns`` and ``--new-session`` by default. Home directories are
+not mounted wholesale: only the agent's own state directories and a small set
+of read-only tool configuration files are visible. SSH keys are never bound;
+instead, a private ssh-agent socket is exposed. Likewise, the session D-Bus is
+replaced by an ``xdg-dbus-proxy`` that only allows desktop portal and
+notification traffic.
+
+Use ``--allow-userns`` and ``--no-new-session`` if an agent needs nested user
+namespaces or its own controlling terminal. Use ``--no-network`` to run
+without network access, and ``--docker`` to expose the Docker socket.
+
+Debugging
+=========
+
+``--debug`` logs the complete bwrap command line. ``--dry-run`` prints it
+without executing it. When in doubt, start the sandbox with ``--shell`` to
+inspect what the agent can see.
 """
 
 import argparse
@@ -22,7 +98,7 @@ import tempfile
 import time
 import tomllib
 from collections.abc import Iterator, Sequence
-from contextlib import ExitStack
+from contextlib import ExitStack, suppress
 from dataclasses import dataclass, replace
 from pathlib import Path
 
@@ -90,11 +166,9 @@ class RWBindConfig(BasicBindConfig):
         super().__post_init__()
         path = Path(self.source)
         if self.create and not path.exists():
-            try:
+            # A missing optional directory is harmless; __iter__ skips it.
+            with suppress(OSError):
                 path.mkdir(parents=True)
-            except OSError:
-                # A missing optional directory is harmless; __iter__ skips it.
-                pass
 
     @property
     def writable(self) -> bool:
@@ -324,7 +398,9 @@ def builtin_profile(name: str) -> AgentProfile | None:
             )
 
         case "cursor-agent" | "agent":
-            current = Path.home() / ".local/share/cursor-agent/versions/current/cursor-agent"
+            current = (
+                Path.home() / ".local/share/cursor-agent/versions/current/cursor-agent"
+            )
             command = (str(current),) if current.exists() else ("cursor-agent",)
             return AgentProfile(
                 name="cursor-agent",
@@ -470,7 +546,11 @@ def merge_agent_config(profile: AgentProfile, agent_config: dict) -> AgentProfil
     command = profile.command
     if "command" in agent_config:
         value = agent_config["command"]
-        command = (value,) if isinstance(value, str) else string_tuple(value, key="command")
+        command = (
+            (value,)
+            if isinstance(value, str)
+            else string_tuple(value, key="command")
+        )
         if not command:
             raise SandboxError("'command' must not be empty")
 
@@ -578,7 +658,9 @@ def get_config_whiteouts(config: dict, home: Path) -> list[Mount]:
 
         target = item.get("target")
         if not isinstance(target, str) or not target:
-            raise SandboxError(f"'whiteouts[{index}].target' must be a non-empty string")
+            raise SandboxError(
+                f"'whiteouts[{index}].target' must be a non-empty string"
+            )
 
         whiteouts.append(Tmpfs(expand_path(target, home)))
 
@@ -682,7 +764,7 @@ def get_default_binds(
     if workon_home := env("WORKON_HOME"):
         binds.append(RWBindConfig(expand_path(workon_home, home), create=True))
     elif (home / ".virtualenvs").exists():
-        binds.append(RWBindConfig(home / ".virtualenvs", create=False))
+        binds.append(ROBindConfig(home / ".virtualenvs"))
 
     for value in profile.ro_paths:
         binds.append(ROBindConfig(expand_path(value, home)))
@@ -815,7 +897,10 @@ def ensure_cwd_in_sandbox(
         )
     else:
         state = "read-only" if visible else "not available"
-        print(f"The current directory {cwd} is {state} inside the sandbox.", file=sys.stderr)
+        print(
+            f"The current directory {cwd} is {state} inside the sandbox.",
+            file=sys.stderr,
+        )
         choice = prompt_choice(
             "Whitelist it for this run only, permanently, or abort?",
             ("once", "always", "no"),
@@ -873,16 +958,19 @@ class SshAgent:
 
     def __enter__(self) -> "SshAgent":
         if shutil.which("ssh-agent") is None:
-            logging.warning("ssh-agent not found; SSH authentication is unavailable")
+            logging.info("ssh-agent not found; SSH authentication is unavailable")
             return self
 
         socket = self._session_dir / "ssh-agent"
-        proc = subprocess.Popen(
-            ["ssh-agent", "-D", "-a", str(socket)],
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        try:
+            proc = subprocess.Popen(
+                ["ssh-agent", "-D", "-a", str(socket)],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except OSError as exc:
+            raise SandboxError(f"failed to start ssh-agent: {exc}") from exc
 
         try:
             for _ in range(50):
@@ -892,7 +980,9 @@ class SshAgent:
                     raise SandboxError("ssh-agent exited during startup")
                 time.sleep(0.1)
             else:
-                raise SandboxError(f"timed out waiting for ssh-agent socket at {socket}")
+                raise SandboxError(
+                    f"timed out waiting for ssh-agent socket at {socket}"
+                )
         except BaseException:
             proc.terminate()
             try:
@@ -909,7 +999,7 @@ class SshAgent:
         if self.socket is None:
             return
         if shutil.which("ssh-add") is None:
-            logging.warning("ssh-add not found; sandbox SSH key was not loaded")
+            logging.info("ssh-add not found; sandbox SSH key was not loaded")
             return
 
         try:
@@ -951,10 +1041,10 @@ class DBusProxy:
     def __enter__(self) -> "DBusProxy":
         bus_address = env("DBUS_SESSION_BUS_ADDRESS")
         if not bus_address:
-            logging.warning("DBUS_SESSION_BUS_ADDRESS is not set; D-Bus is unavailable")
+            logging.info("DBUS_SESSION_BUS_ADDRESS is not set; D-Bus is unavailable")
             return self
         if shutil.which("xdg-dbus-proxy") is None:
-            logging.warning("xdg-dbus-proxy not found; D-Bus is unavailable")
+            logging.info("xdg-dbus-proxy not found; D-Bus is unavailable")
             return self
 
         socket = self._session_dir / "bus"
@@ -974,6 +1064,9 @@ class DBusProxy:
                 stderr=subprocess.DEVNULL,
                 pass_fds=(write_fd,),
             )
+        except OSError as exc:
+            os.close(read_fd)
+            raise SandboxError(f"failed to start xdg-dbus-proxy: {exc}") from exc
         finally:
             os.close(write_fd)
 
@@ -1143,6 +1236,10 @@ def build_bwrap_args(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Sandbox AI agents using bubblewrap",
+        epilog=(
+            "Configuration is read from ~/.config/bwrap-agent.toml "
+            "(or $XDG_CONFIG_HOME/bwrap-agent.toml)."
+        ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         allow_abbrev=False,
     )
@@ -1255,7 +1352,9 @@ def run(options: argparse.Namespace) -> int:
     home = Path.home()
     cwd = Path.cwd()
     runtime_dir = Path(env("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}")
-    config_path = expand_path(options.config, home) if options.config else default_config_path()
+    config_path = (
+        expand_path(options.config, home) if options.config else default_config_path()
+    )
     config = load_config(config_path)
 
     agent = options.agent
@@ -1295,9 +1394,12 @@ def run(options: argparse.Namespace) -> int:
             ssh_agent: SshAgent | None = None
             if not options.no_ssh_agent:
                 ssh_agent = stack.enter_context(SshAgent(session_dir))
-                if ssh_agent.socket is not None and not options.dry_run:
-                    if key := find_sandbox_ssh_key():
-                        ssh_agent.add_key(key)
+                if (
+                    ssh_agent.socket is not None
+                    and not options.dry_run
+                    and (key := find_sandbox_ssh_key())
+                ):
+                    ssh_agent.add_key(key)
 
             dbus_proxy: DBusProxy | None = None
             if not options.no_dbus:
@@ -1360,6 +1462,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     except SandboxError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
+    except KeyboardInterrupt:
+        return 130
 
 
 if __name__ == "__main__":
