@@ -9,6 +9,7 @@ Use `bwrap_agent.py --help` for usage information.
 """
 
 import argparse
+import json
 import logging
 import os
 import pwd
@@ -17,6 +18,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tomllib
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -193,6 +195,19 @@ ENV_VARS_TO_SHARE = (
     "XDG_SESSION_TYPE",
     "XDG_STATE_HOME",
 )
+
+# These are only meaningful for agents that talk to a display server.
+GUI_ENV_VARS = {
+    "DISPLAY",
+    "MOZ_ENABLE_WAYLAND",
+    "WAYLAND_DISPLAY",
+    "XAUTHORITY",
+    "XCURSOR_SIZE",
+    "XDG_SESSION_TYPE",
+}
+
+CONFIG_FILE_NAME = "bwrap-agent.toml"
+
 
 # Read-only home paths that are commonly needed by development tools.
 HOME_RO_PATHS = (
@@ -397,11 +412,109 @@ def generic_profile(name: str) -> AgentProfile:
     return AgentProfile(name=name, command=(name,), rw_paths=rw_paths)
 
 
-def get_agent_profile(agent: str, shell: bool = False) -> AgentProfile:
-    """Resolve an agent name to a profile."""
+def default_config_path() -> Path:
+    """Return the default configuration file location."""
+    base = env("XDG_CONFIG_HOME") or str(Path.home() / ".config")
+    return expand_path(base, Path.home()) / CONFIG_FILE_NAME
+
+
+def load_config(path: Path) -> dict:
+    """Load the TOML configuration, returning an empty table when it does not exist."""
+    if not path.exists():
+        return {}
+
+    try:
+        with path.open("rb") as fobj:
+            config = tomllib.load(fobj)
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        raise SandboxError(f"failed to read {path}: {exc}") from exc
+
+    if not isinstance(config, dict):
+        raise SandboxError(f"expected a TOML table in {path}")
+
+    return config
+
+
+def get_config_agent(config: dict, *names: str) -> dict:
+    """Return the ``[agents.<name>]`` table for the first matching name."""
+    agents = config.get("agents", {})
+    if not isinstance(agents, dict):
+        raise SandboxError("'agents' must be a table")
+
+    for name in names:
+        candidate = agents.get(name)
+        if candidate is None:
+            continue
+        if not isinstance(candidate, dict):
+            raise SandboxError(f"'agents.{name}' must be a table")
+        return candidate
+
+    return {}
+
+
+def string_tuple(value: object, *, key: str) -> tuple[str, ...]:
+    """Validate and convert a TOML value to a tuple of strings."""
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise SandboxError(f"'{key}' must be a list of strings")
+    return tuple(value)
+
+
+def merge_agent_config(profile: AgentProfile, agent_config: dict) -> AgentProfile:
+    """Apply a user-provided ``[agents.<name>]`` table to a built-in profile."""
+    if not agent_config:
+        return profile
+
+    command = profile.command
+    if "command" in agent_config:
+        value = agent_config["command"]
+        command = (value,) if isinstance(value, str) else string_tuple(value, key="command")
+        if not command:
+            raise SandboxError("'command' must not be empty")
+
+    rw_paths = profile.rw_paths
+    if "rw_paths" in agent_config:
+        rw_paths = (*rw_paths, *string_tuple(agent_config["rw_paths"], key="rw_paths"))
+
+    ro_paths = profile.ro_paths
+    if "ro_paths" in agent_config:
+        ro_paths = (*ro_paths, *string_tuple(agent_config["ro_paths"], key="ro_paths"))
+
+    extra_env = profile.env
+    if "env" in agent_config:
+        extra_env = (*extra_env, *string_tuple(agent_config["env"], key="env"))
+
+    gui = agent_config.get("gui", profile.gui)
+    if not isinstance(gui, bool):
+        raise SandboxError("'gui' must be a boolean")
+
+    network = agent_config.get("network", profile.network)
+    if not isinstance(network, bool):
+        raise SandboxError("'network' must be a boolean")
+
+    return replace(
+        profile,
+        command=command,
+        rw_paths=rw_paths,
+        ro_paths=ro_paths,
+        env=extra_env,
+        gui=gui,
+        network=network,
+    )
+
+
+def get_agent_profile(
+    agent: str,
+    config: dict | None = None,
+    *,
+    shell: bool = False,
+) -> AgentProfile:
+    """Resolve an agent name to a profile, applying user configuration."""
+    config = config or {}
+
     if shell:
         shell_path = env("SHELL") or pwd.getpwuid(os.getuid()).pw_shell
-        return AgentProfile(name="shell", command=(shell_path,))
+        profile = AgentProfile(name="shell", command=(shell_path,), gui=False)
+        return merge_agent_config(profile, get_config_agent(config, "shell"))
 
     name = Path(agent).name
     profile = builtin_profile(name) or generic_profile(name)
@@ -409,7 +522,65 @@ def get_agent_profile(agent: str, shell: bool = False) -> AgentProfile:
     if profile.command == (name,) and agent != name:
         profile = replace(profile, command=(agent,))
 
-    return profile
+    agent_config = get_config_agent(config, name, profile.name)
+    return merge_agent_config(profile, agent_config)
+
+
+def get_config_binds(config: dict, home: Path) -> list[Mount]:
+    """Build bind mounts from the ``[[binds]]`` configuration section."""
+    raw_binds = config.get("binds", [])
+    if not isinstance(raw_binds, list):
+        raise SandboxError("'binds' must be a list of tables")
+
+    binds: list[Mount] = []
+    for index, item in enumerate(raw_binds):
+        if not isinstance(item, dict):
+            raise SandboxError(f"'binds[{index}]' must be a table")
+
+        source = item.get("source")
+        if not isinstance(source, str) or not source:
+            raise SandboxError(f"'binds[{index}].source' must be a non-empty string")
+
+        read_only = item.get("read_only", True)
+        if not isinstance(read_only, bool):
+            raise SandboxError(f"'binds[{index}].read_only' must be a boolean")
+
+        source_path = expand_path(source, home)
+        if not source_path.exists():
+            raise SandboxError(f"bind source does not exist: {source_path}")
+
+        target = item.get("target")
+        if target is not None and not isinstance(target, str):
+            raise SandboxError(f"'binds[{index}].target' must be a string")
+        target_path = expand_path(target, home) if target else None
+
+        if read_only:
+            binds.append(ROBindConfig(source_path, target_path))
+        else:
+            binds.append(RWBindConfig(source_path, target_path, create=False))
+
+    return binds
+
+
+def get_config_whiteouts(config: dict, home: Path) -> list[Mount]:
+    """Build tmpfs whiteouts from the ``[[whiteouts]]`` configuration section."""
+    raw_whiteouts = config.get("whiteouts", [])
+    if not isinstance(raw_whiteouts, list):
+        raise SandboxError("'whiteouts' must be a list of tables")
+
+    whiteouts: list[Mount] = []
+    for index, item in enumerate(raw_whiteouts):
+        if not isinstance(item, dict):
+            raise SandboxError(f"'whiteouts[{index}]' must be a table")
+
+        target = item.get("target")
+        if not isinstance(target, str) or not target:
+            raise SandboxError(f"'whiteouts[{index}].target' must be a non-empty string")
+
+        whiteouts.append(Tmpfs(expand_path(target, home)))
+
+    return whiteouts
+
 
 
 def resolve_command(profile: AgentProfile, args: Sequence[str]) -> list[str]:
@@ -466,18 +637,20 @@ def get_default_binds(
         ROBindConfig("/usr/libexec/flatpak-xdg-utils/xdg-open", "/usr/bin/xdg-open"),
     )
     binds.append(ROBindConfig("/run/systemd/resolve"))
-    binds.append(ROBindConfig("/tmp/.X11-unix") if env("DISPLAY") else ())
 
-    if wayland_display := env("WAYLAND_DISPLAY"):
-        wayland_path = Path(wayland_display)
-        if not wayland_path.is_absolute():
-            wayland_path = runtime_dir / wayland_path
-        binds.append(ROBindConfig(wayland_path))
+    if profile.gui:
+        if env("DISPLAY"):
+            binds.append(ROBindConfig("/tmp/.X11-unix"))
+            binds.append(ROBindConfig(home / ".Xauthority"))
 
-    if xauthority := env("XAUTHORITY"):
-        binds.append(ROBindConfig(xauthority))
-    if env("DISPLAY"):
-        binds.append(ROBindConfig(home / ".Xauthority"))
+        if wayland_display := env("WAYLAND_DISPLAY"):
+            wayland_path = Path(wayland_display)
+            if not wayland_path.is_absolute():
+                wayland_path = runtime_dir / wayland_path
+            binds.append(ROBindConfig(wayland_path))
+
+        if xauthority := env("XAUTHORITY"):
+            binds.append(ROBindConfig(xauthority))
 
     if docker:
         docker_host = env("DOCKER_HOST")
@@ -539,22 +712,129 @@ def get_extra_binds(
     return binds
 
 
-def add_cwd_bind(binds: list[Mount], home: Path) -> None:
-    """Make the current directory writable inside the sandbox."""
+def add_bind_to_config(path: Path, source: Path, *, read_only: bool) -> None:
+    """Append a ``[[binds]]`` entry to the configuration file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    prefix = ""
+    if path.exists():
+        content = path.read_bytes()
+        if content:
+            prefix = "\n" if content.endswith(b"\n") else "\n\n"
+
+    entry = (
+        "[[binds]]",
+        f"source = {json.dumps(str(source))}",
+        f"read_only = {json.dumps(read_only)}",
+    )
+
+    try:
+        with path.open("a") as fobj:
+            fobj.write(prefix + "\n".join(entry) + "\n")
+    except OSError as exc:
+        raise SandboxError(f"failed to update {path}: {exc}") from exc
+
+
+def is_interactive() -> bool:
+    return sys.stdin.isatty() and sys.stderr.isatty()
+
+
+def prompt_choice(prompt: str, choices: Sequence[str], default: str) -> str:
+    choices_text = "/".join(choices)
+    while True:
+        try:
+            answer = input(f"{prompt} [{choices_text}] ({default}): ").strip().lower()
+        except EOFError:
+            return default
+        if not answer:
+            return default
+        if answer in choices:
+            return answer
+        print(f"Please answer one of: {', '.join(choices)}", file=sys.stderr)
+
+
+def prompt_yes_no(prompt: str, *, default: bool = True) -> bool:
+    suffix = "Y/n" if default else "y/N"
+    try:
+        answer = input(f"{prompt} [{suffix}]: ").strip().lower()
+    except EOFError:
+        return default
+    if not answer:
+        return default
+    return answer in {"y", "yes"}
+
+
+def cwd_is_visible(binds: Sequence[Mount], cwd: Path) -> bool:
+    return any(
+        isinstance(bind, BasicBindConfig) and bind.covers_path(cwd) for bind in binds
+    )
+
+
+def cwd_is_writable(binds: Sequence[Mount], cwd: Path) -> bool:
+    return any(
+        isinstance(bind, BasicBindConfig) and bind.writable and bind.covers_path(cwd)
+        for bind in binds
+    )
+
+
+def ensure_cwd_in_sandbox(
+    binds: list[Mount],
+    *,
+    config_path: Path,
+    options: argparse.Namespace,
+    home: Path,
+) -> None:
+    """Make sure the current directory is available and writable inside the sandbox."""
     cwd = Path.cwd()
 
+    if cwd_is_writable(binds, cwd):
+        return
+    if options.cwd_read_only and cwd_is_visible(binds, cwd):
+        return
+
     if is_broad_path(cwd, home):
-        raise SandboxError(f"refusing to bind {cwd} read-write; run from a project directory")
+        raise SandboxError(f"refusing to whitelist {cwd}; run from a project directory")
 
-    for bind in binds:
-        if (
-            isinstance(bind, BasicBindConfig)
-            and bind.writable
-            and bind.covers_path(cwd)
-        ):
-            return
+    visible = cwd_is_visible(binds, cwd)
+    always = False
 
-    binds.append(RWBindConfig(cwd, create=False))
+    if options.dry_run:
+        print(
+            f"warning: {cwd} is not writable inside the sandbox",
+            file=sys.stderr,
+        )
+        read_only = options.cwd_read_only
+    elif not is_interactive():
+        state = "read-only" if visible else "not available"
+        raise SandboxError(
+            f"{cwd} is {state} inside the sandbox; "
+            f"add it to {config_path} under [[binds]]"
+        )
+    else:
+        state = "read-only" if visible else "not available"
+        print(f"The current directory {cwd} is {state} inside the sandbox.", file=sys.stderr)
+        choice = prompt_choice(
+            "Whitelist it for this run only, permanently, or abort?",
+            ("once", "always", "no"),
+            "no",
+        )
+        if choice == "no":
+            raise SandboxError("aborted")
+        always = choice == "always"
+        read_only = options.cwd_read_only or not prompt_yes_no(
+            "Allow write access?",
+            default=True,
+        )
+
+    if read_only:
+        binds.append(ROBindConfig(cwd))
+    else:
+        binds.append(RWBindConfig(cwd, create=False))
+
+    if always:
+        add_bind_to_config(config_path, cwd, read_only=read_only)
+        print(f"Added {cwd} to {config_path}.", file=sys.stderr)
+
 
 
 def dedupe_binds(binds: Sequence[Mount]) -> list[Mount]:
@@ -583,20 +863,43 @@ def get_bind_args(binds: Sequence[Mount]) -> list[str]:
 def get_env_args(
     profile: AgentProfile,
     options: argparse.Namespace,
+    config: dict,
     home: Path,
     runtime_dir: Path,
     cwd: Path,
 ) -> list[str]:
     """Build the explicit environment for the sandbox."""
-    values = {
-        name: value
-        for name in ENV_VARS_TO_SHARE
-        if (value := env(name)) is not None
-    }
+    values: dict[str, str] = {}
+    for name in ENV_VARS_TO_SHARE:
+        if not profile.gui and name in GUI_ENV_VARS:
+            continue
+        if (value := env(name)) is not None:
+            values[name] = value
 
     for name in profile.env:
         if (value := env(name)) is not None:
             values[name] = value
+
+    raw_envvars = config.get("envvars", [])
+    if not isinstance(raw_envvars, list):
+        raise SandboxError("'envvars' must be a list of tables")
+    for index, item in enumerate(raw_envvars):
+        if not isinstance(item, dict):
+            raise SandboxError(f"'envvars[{index}]' must be a table")
+
+        name = item.get("name")
+        if not isinstance(name, str) or not name:
+            raise SandboxError(f"'envvars[{index}].name' must be a non-empty string")
+
+        value = item.get("value")
+        if value is None:
+            value = env(name)
+        if value is None:
+            raise SandboxError(f"environment variable is not set: {name}")
+        if not isinstance(value, str):
+            raise SandboxError(f"'envvars[{index}].value' must be a string")
+
+        values[name] = value
 
     if options.docker and (docker_host := env("DOCKER_HOST")):
         values["DOCKER_HOST"] = docker_host
@@ -609,7 +912,8 @@ def get_env_args(
     values["USER"] = values.get("USER", pwd.getpwuid(os.getuid()).pw_name)
     values["LOGNAME"] = values.get("LOGNAME", values["USER"])
     values["XDG_RUNTIME_DIR"] = values.get("XDG_RUNTIME_DIR", str(runtime_dir))
-    values.setdefault("MOZ_ENABLE_WAYLAND", "1")
+    if profile.gui:
+        values.setdefault("MOZ_ENABLE_WAYLAND", "1")
 
     if virtual_env := values.get("VIRTUAL_ENV"):
         venv_bin = str(Path(virtual_env) / "bin")
@@ -632,6 +936,7 @@ def get_env_args(
         result.extend(("--setenv", name, value))
 
     return result
+
 
 
 def build_bwrap_args(
@@ -679,6 +984,22 @@ def build_parser() -> argparse.ArgumentParser:
         "--dry-run",
         action="store_true",
         help="print the bwrap command instead of executing it",
+    )
+    parser.add_argument(
+        "--config",
+        type=Path,
+        metavar="PATH",
+        help="configuration file to use instead of the default",
+    )
+    parser.add_argument(
+        "--gui",
+        action="store_true",
+        help="expose display server sockets to the agent",
+    )
+    parser.add_argument(
+        "--cwd-read-only",
+        action="store_true",
+        help="bind the current directory read-only",
     )
     parser.add_argument(
         "-b",
@@ -757,17 +1078,22 @@ def run(options: argparse.Namespace) -> int:
     home = Path.home()
     cwd = Path.cwd()
     runtime_dir = Path(env("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}")
+    config_path = expand_path(options.config, home) if options.config else default_config_path()
+    config = load_config(config_path)
 
     agent = options.agent
     if options.shell:
         agent_args = ([agent] if agent else []) + list(options.agent_args)
-        profile = get_agent_profile("", shell=True)
+        profile = get_agent_profile("", config, shell=True)
         command = resolve_command(profile, agent_args)
     else:
         if not agent:
             raise SandboxError("an agent command is required (or use --shell)")
-        profile = get_agent_profile(agent)
+        profile = get_agent_profile(agent, config)
         command = resolve_command(profile, options.agent_args)
+
+    if options.gui:
+        profile = replace(profile, gui=True)
 
     binds = get_default_binds(
         profile,
@@ -775,11 +1101,18 @@ def run(options: argparse.Namespace) -> int:
         runtime_dir,
         docker=options.docker,
     )
+    binds.extend(get_config_binds(config, home))
     binds.extend(get_extra_binds(options, home))
-    add_cwd_bind(binds, home)
+    ensure_cwd_in_sandbox(
+        binds,
+        config_path=config_path,
+        options=options,
+        home=home,
+    )
+    binds.extend(get_config_whiteouts(config, home))
     binds = dedupe_binds(binds)
 
-    env_args = get_env_args(profile, options, home, runtime_dir, cwd)
+    env_args = get_env_args(profile, options, config, home, runtime_dir, cwd)
     bwrap_args = build_bwrap_args(
         binds,
         command,
