@@ -18,8 +18,11 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
+import time
 import tomllib
 from collections.abc import Iterator, Sequence
+from contextlib import ExitStack
 from dataclasses import dataclass, replace
 from pathlib import Path
 
@@ -860,6 +863,170 @@ def get_bind_args(binds: Sequence[Mount]) -> list[str]:
     return result
 
 
+class SshAgent:
+    """A private ssh-agent whose socket is the only SSH access for the sandbox."""
+
+    def __init__(self, session_dir: Path) -> None:
+        self.socket: Path | None = None
+        self._proc: subprocess.Popen | None = None
+        self._session_dir = session_dir
+
+    def __enter__(self) -> "SshAgent":
+        if shutil.which("ssh-agent") is None:
+            logging.warning("ssh-agent not found; SSH authentication is unavailable")
+            return self
+
+        socket = self._session_dir / "ssh-agent"
+        proc = subprocess.Popen(
+            ["ssh-agent", "-D", "-a", str(socket)],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+        try:
+            for _ in range(50):
+                if socket.is_socket():
+                    break
+                if proc.poll() is not None:
+                    raise SandboxError("ssh-agent exited during startup")
+                time.sleep(0.1)
+            else:
+                raise SandboxError(f"timed out waiting for ssh-agent socket at {socket}")
+        except BaseException:
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:  # pragma: no cover
+                proc.kill()
+            raise
+
+        self._proc = proc
+        self.socket = socket
+        return self
+
+    def add_key(self, path: Path) -> None:
+        if self.socket is None:
+            return
+        if shutil.which("ssh-add") is None:
+            logging.warning("ssh-add not found; sandbox SSH key was not loaded")
+            return
+
+        try:
+            subprocess.run(
+                ["ssh-add", "-q", str(path)],
+                env={**os.environ, "SSH_AUTH_SOCK": str(self.socket)},
+                check=True,
+            )
+        except (OSError, subprocess.CalledProcessError) as exc:
+            raise SandboxError(f"failed to add SSH key {path}: {exc}") from exc
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        proc = self._proc
+        self._proc = None
+        if proc is None:
+            return
+
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:  # pragma: no cover
+            proc.kill()
+
+
+class DBusProxy:
+    """A filtered D-Bus connection that only exposes a couple of desktop services."""
+
+    policy = (
+        "--talk=org.freedesktop.portal.Desktop",
+        "--talk=org.freedesktop.Notifications",
+    )
+
+    def __init__(self, session_dir: Path) -> None:
+        self.socket: Path | None = None
+        self._proc: subprocess.Popen | None = None
+        self._read_fd: int | None = None
+        self._session_dir = session_dir
+
+    def __enter__(self) -> "DBusProxy":
+        bus_address = env("DBUS_SESSION_BUS_ADDRESS")
+        if not bus_address:
+            logging.warning("DBUS_SESSION_BUS_ADDRESS is not set; D-Bus is unavailable")
+            return self
+        if shutil.which("xdg-dbus-proxy") is None:
+            logging.warning("xdg-dbus-proxy not found; D-Bus is unavailable")
+            return self
+
+        socket = self._session_dir / "bus"
+        read_fd, write_fd = os.pipe()
+        try:
+            proc = subprocess.Popen(
+                [
+                    "xdg-dbus-proxy",
+                    f"--fd={write_fd}",
+                    bus_address,
+                    str(socket),
+                    "--filter",
+                    *self.policy,
+                ],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                pass_fds=(write_fd,),
+            )
+        finally:
+            os.close(write_fd)
+
+        try:
+            # The proxy writes a byte once it is ready. A closed pipe means it exited.
+            if not os.read(read_fd, 1):
+                proc.wait(timeout=5)
+                raise SandboxError("D-Bus proxy failed to start")
+        except BaseException:
+            os.close(read_fd)
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:  # pragma: no cover
+                proc.kill()
+            raise
+
+        self._proc = proc
+        self._read_fd = read_fd
+        self.socket = socket
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        proc = self._proc
+        read_fd = self._read_fd
+        self._proc = None
+        self._read_fd = None
+
+        if read_fd is not None:
+            os.close(read_fd)
+        if proc is None:
+            return
+
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:  # pragma: no cover
+            proc.kill()
+
+
+def find_sandbox_ssh_key() -> Path | None:
+    """Return the first ``~/.ssh/sandbox_*`` private key, if any."""
+    ssh_dir = Path.home() / ".ssh"
+    if not ssh_dir.is_dir():
+        return None
+
+    for path in sorted(ssh_dir.glob("sandbox_*")):
+        if path.is_file() and not path.name.endswith(".pub"):
+            return path
+
+    return None
+
+
 def get_env_args(
     profile: AgentProfile,
     options: argparse.Namespace,
@@ -1049,6 +1216,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="expose the Docker socket to the sandbox",
     )
     parser.add_argument(
+        "--no-ssh-agent",
+        action="store_true",
+        help="do not provide a filtered ssh-agent to the sandbox",
+    )
+    parser.add_argument(
+        "--no-dbus",
+        action="store_true",
+        help="do not provide a filtered D-Bus connection to the sandbox",
+    )
+    parser.add_argument(
         "--shell",
         action="store_true",
         help="run a shell inside the sandbox instead of an agent",
@@ -1110,37 +1287,73 @@ def run(options: argparse.Namespace) -> int:
         home=home,
     )
     binds.extend(get_config_whiteouts(config, home))
-    binds = dedupe_binds(binds)
 
-    env_args = get_env_args(profile, options, config, home, runtime_dir, cwd)
-    bwrap_args = build_bwrap_args(
-        binds,
-        command,
-        options,
-        profile,
-        features,
-        env_args,
-        cwd,
-    )
+    with tempfile.TemporaryDirectory(prefix="bwrap-agent-") as tmp_path:
+        session_dir = Path(tmp_path)
 
-    if options.debug:
-        logging.debug("Running:\n  %s", shlex.join(bwrap_args))
+        with ExitStack() as stack:
+            ssh_agent: SshAgent | None = None
+            if not options.no_ssh_agent:
+                ssh_agent = stack.enter_context(SshAgent(session_dir))
+                if ssh_agent.socket is not None and not options.dry_run:
+                    if key := find_sandbox_ssh_key():
+                        ssh_agent.add_key(key)
 
-    if options.dry_run:
-        print(shlex.join(bwrap_args))
-        return 0
+            dbus_proxy: DBusProxy | None = None
+            if not options.no_dbus:
+                dbus_proxy = stack.enter_context(DBusProxy(session_dir))
 
-    try:
-        return subprocess.run(bwrap_args, check=False).returncode
-    except OSError as exc:
-        raise SandboxError(f"failed to execute bwrap: {exc}") from exc
+            if ssh_agent is not None and ssh_agent.socket is not None:
+                binds.append(ROBindConfig(ssh_agent.socket))
+
+            if dbus_proxy is not None and dbus_proxy.socket is not None:
+                binds.append(ROBindConfig(dbus_proxy.socket))
+
+            binds = dedupe_binds(binds)
+
+            env_args = get_env_args(profile, options, config, home, runtime_dir, cwd)
+            if ssh_agent is not None and ssh_agent.socket is not None:
+                env_args.extend(("--setenv", "SSH_AUTH_SOCK", str(ssh_agent.socket)))
+            if dbus_proxy is not None and dbus_proxy.socket is not None:
+                env_args.extend(
+                    (
+                        "--setenv",
+                        "DBUS_SESSION_BUS_ADDRESS",
+                        f"unix:path={dbus_proxy.socket}",
+                    )
+                )
+
+            bwrap_args = build_bwrap_args(
+                binds,
+                command,
+                options,
+                profile,
+                features,
+                env_args,
+                cwd,
+            )
+
+            if options.debug:
+                logging.debug("Running:\n  %s", shlex.join(bwrap_args))
+
+            if options.dry_run:
+                print(shlex.join(bwrap_args))
+                return 0
+
+            try:
+                return subprocess.run(bwrap_args, check=False).returncode
+            except OSError as exc:
+                raise SandboxError(f"failed to execute bwrap: {exc}") from exc
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     options = parser.parse_args(argv)
 
-    logging.basicConfig(level="DEBUG" if options.debug else "WARNING")
+    logging.basicConfig(
+        level="DEBUG" if options.debug else "WARNING",
+        format="%(levelname)s: %(message)s",
+    )
 
     try:
         return run(options)
